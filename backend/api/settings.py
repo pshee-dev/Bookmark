@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
+    'debug_toolbar', # 디버깅할 때 참고할 자료를 제공하는 툴. 개발모드에서만 실행
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', # 디버그 툴바 관련 설정
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -123,3 +125,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# - 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
+# - 127.0.0.1 : 
+INTERNAL_IPS = [
+    "127.0.0.1", #
+]
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
