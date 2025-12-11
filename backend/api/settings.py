@@ -129,10 +129,14 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# - 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
-# - 127.0.0.1 : 
+# 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
 INTERNAL_IPS = [
-    "127.0.0.1", #
+    "127.0.0.1", 
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser' 
+
+# 정적파일 서빙할 폴더 경로 지정 
+STATIC_URL = '/static/'   # 템플릿에서 불러올 URL
+STATICFILES_DIRS = [ BASE_DIR / "static" ]   # 개발용 공용 static 경로
+STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴더
