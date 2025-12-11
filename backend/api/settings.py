@@ -134,7 +134,7 @@ INTERNAL_IPS = [
     "127.0.0.1", 
 ]
 
-AUTH_USER_MODEL = 'accounts.CustomUser' 
+AUTH_USER_MODEL = 'accounts.User' 
 
 # 정적파일 서빙할 폴더 경로 지정 
 STATIC_URL = '/static/'   # 템플릿에서 불러올 URL (정적 파일을 참조할 URL prefix)
