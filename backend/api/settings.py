@@ -31,6 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'accounts',
+    'django_extensions', # 장고 확장 기능 제공하는 툴
+    'rest_framework', 
+    'debug_toolbar', # 디버깅할 때 참고할 자료를 제공하는 툴. 개발모드에서만 실행
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware', # 디버그 툴바 관련 설정
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -54,7 +59,9 @@ ROOT_URLCONF = 'api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'templates',
+            ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,3 +128,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
+INTERNAL_IPS = [
+    "127.0.0.1", 
+]
+
+AUTH_USER_MODEL = 'accounts.User' 
+
+# 정적파일 서빙할 폴더 경로 지정 
+STATIC_URL = '/static/'   # 템플릿에서 불러올 URL (정적 파일을 참조할 URL prefix)
+STATICFILES_DIRS = [ BASE_DIR / "static" ]   # 개발용 공용 static 경로
+STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴더

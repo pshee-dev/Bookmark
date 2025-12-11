@@ -15,8 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+import debug_toolbar
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+]
+
+# debug toolbar를 url에 붙인다. 
+# if settings.DEBUG: // 운영환경일 경우 해당 기능 적용 x
+urlpatterns += [
+    path('__debug__/', include(debug_toolbar.urls)),
 ]
