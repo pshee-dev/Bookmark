@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_extensions', # 장고 확장 기능 제공하는 툴
+    'rest_framework', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
