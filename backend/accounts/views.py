@@ -9,14 +9,14 @@ User = get_user_model()
 
 @api_view(['GET'])
 def detail(request, user_id):
-    member = User.objects.get(id=user_id)
+    member = get_object_or_404(User, id=user_id)
     serializer = UserProfileSerializer(member)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def follow(request, user_id):
     me = request.user
-    member = User.objects.get(id=user_id)
+    member = get_object_or_404(User, id=user_id)
     # 자기 자신은 팔로우 할 수 없음
     if me != member:
         if me in member.followers.all():
