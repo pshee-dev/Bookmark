@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 def detail(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     serializer = BookSerializer(book)
-    return Response(serializer.data, status=200)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 def create(request):
     pass
