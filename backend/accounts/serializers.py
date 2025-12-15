@@ -32,3 +32,12 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         model = User
         fields = ('id', 'username', 'last_name', 'first_name', 'email', 'profile_img')
         read_only_fields = ('username',)
+
+
+# [Profile] 유저 프로필 페이지 조회 - GET
+class UserProfileSerializer(serializers.ModelSerializer):
+
+    # Todo: followings_count, followers_count, reviews_count, galfies_count
+    class Meta:
+        model = User
+        fields = ('last_name', 'first_name', 'profile_img')
