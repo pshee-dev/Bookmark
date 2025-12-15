@@ -20,3 +20,9 @@ def review_list_and_create(request, book_id):
 
 def galfy_list_and_create(request, book_id):
     pass
+STATUS_MAP = {
+    400: status.HTTP_400_BAD_REQUEST,
+    500: status.HTTP_500_INTERNAL_SERVER_ERROR,
+    502: status.HTTP_502_BAD_GATEWAY,
+    504: status.HTTP_504_GATEWAY_TIMEOUT,
+}
