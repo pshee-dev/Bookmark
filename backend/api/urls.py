@@ -28,6 +28,7 @@ urlpatterns = [
     
     path('api/v1/accounts/', include('dj_rest_auth.urls')),
     path('api/v1/accounts/signup/', include('dj_rest_auth.registration.urls')),
+    path('api/v1/users/', include('accounts.urls')), # 인증 관련 경로보다 아래에 위치해야함
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # debug toolbar를 url에 붙인다. 
