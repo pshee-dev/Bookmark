@@ -13,10 +13,21 @@ def detail(request, user_id):
     serializer = UserProfileSerializer(member)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+@api_view(['POST'])
 def follow(request, user_id):
-    pass
-
+    me = request.user
+    member = User.objects.get(id=user_id)
+    # 자기 자신은 팔로우 할 수 없음
+    if me != member:
+        if me in member.followers.all():
+            # 언팔로우
+            member.followers.remove(me)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # 팔로우
+            member.followers.add(me)
+            return Response(status=status.HTTP_200_OK)
+        
 
 def get_following_list(request, user_id):
     pass
