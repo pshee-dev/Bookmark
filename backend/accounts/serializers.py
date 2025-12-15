@@ -27,7 +27,7 @@ class CustomLoginSerializer(LoginSerializer):
 
 # [User Detail] 로그인 된 사용자 정보 GET, PUT, PATCH 가능한 시리얼라이저
 class CustomUserDetailsSerializer(UserDetailsSerializer):
-    
+
     # Todo: followings_count, followers_count, reviews_count, galfies_count
     class Meta:        
         model = User
@@ -42,3 +42,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('last_name', 'first_name', 'profile_img')
+
+
+# [Following/Follower List] 팔로잉/팔로워 리스트 조회 - GET
+class FollowListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'last_name', 'first_name', 'profile_img')

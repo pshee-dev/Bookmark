@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
-from .serializers import UserProfileSerializer
+from .serializers import UserProfileSerializer, FollowListSerializer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -28,13 +28,19 @@ def follow(request, user_id):
             member.followers.add(me)
             return Response(status=status.HTTP_200_OK)
         
-
+@api_view(['GET'])
 def get_following_list(request, user_id):
-    pass
+    member = get_object_or_404(User, id=user_id)
+    followings = get_list_or_404(member.followings.all())
+    serializer = FollowListSerializer(followings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+@api_view(['GET'])
 def get_follower_list(request, user_id):
-    pass
+    member = get_object_or_404(User, id=user_id)
+    followers = get_list_or_404(member.followers.all())
+    serializer = FollowListSerializer(followers, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def get_review_list(request, user_id):
