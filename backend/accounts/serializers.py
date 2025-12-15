@@ -37,10 +37,15 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 # [Profile] 유저 프로필 페이지 조회 - GET
 class UserProfileSerializer(serializers.ModelSerializer):
 
-    # Todo: followings_count, followers_count, reviews_count, galfies_count
+    # Todo: reviews_count, galfies_count
+    followings_count = serializers.IntegerField(read_only=True)
+    followers_count = serializers.IntegerField(read_only=True)
+    # reviews_count = serializers.IntegerField(read_only=True)
+    # galfies_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = User
-        fields = ('last_name', 'first_name', 'profile_img')
+        fields = ('last_name', 'first_name', 'profile_img', 'followings_count', 'followers_count')
 
 
 # [Following/Follower List] 팔로잉/팔로워 리스트 조회 - GET

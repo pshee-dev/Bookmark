@@ -4,12 +4,19 @@ from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
 from .serializers import UserProfileSerializer, FollowListSerializer
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 
 User = get_user_model()
 
 @api_view(['GET'])
 def profile(request, user_id):
-    member = get_object_or_404(User, id=user_id)
+    user_with_counts = User.objects.annotate(
+        followings_count=Count('followings', distinct=True),
+        followers_count=Count('followers', distinct=True),
+        # reviews_count=Count('reviews', distinct=True),
+        # galfies_count=Count('galfies', distinct=True),
+    )
+    member = get_object_or_404(user_with_counts, id=user_id)
     serializer = UserProfileSerializer(member)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
