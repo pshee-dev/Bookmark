@@ -8,6 +8,7 @@ Django==5.2.9
 django-allauth==64.0.0
 django-cors-headers==4.9.0
 django-debug-toolbar==6.1.0
+django-extensions==4.1
 djangorestframework==3.16.1
 idna==3.11
 oauthlib==3.3.1
