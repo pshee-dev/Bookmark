@@ -151,5 +151,15 @@ STATIC_URL = '/static/'   # 템플릿에서 불러올 URL (정적 파일을 참�
 STATICFILES_DIRS = [ BASE_DIR / "static" ]   # 개발용 공용 static 경로
 STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴더
 
+# 동적파일을 저장할 폴더 경로 지정
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = 'media/'
 
 ACCOUNT_EMAIL_VERIFICATION = 'none' # dj-rest-auth 이메일 인증 비활성화
+
+# dj-rest-auth 커스텀한 시리얼라이저 등록
+REST_AUTH = {
+    'LOGIN_SERIALIZER': 'accounts.serializers.CustomLoginSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
+    'REGISTER_SERIALIZER': 'accounts.serializers.CustomSignupSerializer',
+}

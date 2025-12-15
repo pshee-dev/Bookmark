@@ -16,6 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
+# media files 경로 설정
+from django.conf import settings
+from django.conf.urls.static import static
+
 import debug_toolbar
 
 urlpatterns = [
@@ -23,7 +28,7 @@ urlpatterns = [
     
     path('accounts/', include('dj_rest_auth.urls')),
     path('accounts/signup/', include('dj_rest_auth.registration.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # debug toolbar를 url에 붙인다. 
 # if settings.DEBUG: // 운영환경일 경우 해당 기능 적용 x
