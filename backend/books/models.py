@@ -8,15 +8,15 @@ class Category(models.Model):
     
 class Book(models.Model):
     title = models.CharField(max_length=255)
-    author = models.CharField(max_length=100)
-    publisher = models.CharField(max_length=150)
-    published_date = models.DateField()
-    isbn = models.CharField(max_length=20)
-    page = models.IntegerField()
-    thumbnail = models.URLField(max_length=500)
+    author = models.CharField(max_length=100, null=True)
+    publisher = models.CharField(max_length=150, null=True)
+    published_date = models.DateField(null=True)
+    isbn = models.CharField(max_length=20, blank=True)
+    page = models.IntegerField(null=True)
+    thumbnail = models.URLField(max_length=500, blank=True)
     category = models.ForeignKey(
         to=Category,
-        on_delete=models.PROTECT,
+        on_delete=models.PROTECT, 
         related_name='books',
     )
 
