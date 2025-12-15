@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 @api_view(['GET'])
-def detail(request, user_id):
+def profile(request, user_id):
     member = get_object_or_404(User, id=user_id)
     serializer = UserProfileSerializer(member)
     return Response(serializer.data, status=status.HTTP_200_OK)
