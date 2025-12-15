@@ -20,7 +20,7 @@ from . import views
 
 app_name = 'books'
 urlpatterns = [
-    path('/', views.create, name='create'),
+    path('', views.create, name='create'),
     path('<int:book_id>/reviews/', views.review_list_and_create, name='reviews'),
     path('<int:book_id>/galfies/', views.galfy_list_and_create, name='galfies'),
     path('<int:book_id>/', views.detail, name='detail'),

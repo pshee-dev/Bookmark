@@ -20,7 +20,7 @@ import debug_toolbar
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('books/', include('books.urls', namespace='books'), name='books'), 
+    path('api/v1/books/', include('books.urls', namespace='books'), name='books'), 
 ]
 
 # debug toolbar를 url에 붙인다. 
