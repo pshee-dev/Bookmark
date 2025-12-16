@@ -41,12 +41,16 @@ def fetch_google_books_thumbnail(title: str):
         data = response.json()
 
     except requests.Timeout:
+        raise TimeoutError(dev_message="구글북스 API 응답 시간 초과", cause=e)
     except requests.RequestException as e:
+        raise ExternalAPIError(dev_message="구글북스 API 호출 실패", cause=e) 
     except ValueError:
+        raise ExternalAPIError(dev_message="구글북스 API 응답 -> JSON 변환 실패", cause=e)
     
     items = data.get("items") or []
     
     if not items:
+        return {}
 
     # 보통 첫 번째가 가장 잘 맞지만, 혹시 몰라 1~5개 중에서 imageLinks 있는 걸 우선 선택
     best = None
@@ -71,6 +75,7 @@ def fetch_google_books_thumbnail(title: str):
         or image_links.get("extraLarge")
     )
 
+    # http로 온 링크의 경우, https로 정리
     if isinstance(thumbnail, str) and thumbnail.startswith("http://"):
         thumbnail = "https://" + thumbnail[len("http://") :]
 
