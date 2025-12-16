@@ -3,7 +3,9 @@ import os
 import requests
 from ..errors import *
 
+# 코드 정리 필요 !!!
 load_dotenv()
+session = requests.Session()
 
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 GOOGLE_BOOKS_ENDPOINT = "https://www.googleapis.com/books/v1/volumes"
@@ -22,7 +24,6 @@ def fetch_google_books_thumbnail(title: str):
         "raw_imageLinks": {...}
     }
     """
-    
     if not GOOGLE_BOOKS_API_KEY:
         raise MissingTTBKey(dev_message="구글북스 API Key 누락")
 
@@ -34,19 +35,18 @@ def fetch_google_books_thumbnail(title: str):
     }
 
     try:
-        response = requests.get(GOOGLE_BOOKS_ENDPOINT, params=params, timeout=10)
+        response = session.get(GOOGLE_BOOKS_ENDPOINT, params=params, timeout=2)
         response.raise_for_status()
+        
         data = response.json()
+
     except requests.Timeout:
-        return {"found": False, "reason": "timeout"}
     except requests.RequestException as e:
-        return {"found": False, "reason": "request_error", "detail": str(e)}
     except ValueError:
-        return {"found": False, "reason": "invalid_json"}
     
     items = data.get("items") or []
+    
     if not items:
-        return {"found": False, "reason": "not_found"}
 
     # 보통 첫 번째가 가장 잘 맞지만, 혹시 몰라 1~5개 중에서 imageLinks 있는 걸 우선 선택
     best = None
@@ -71,7 +71,6 @@ def fetch_google_books_thumbnail(title: str):
         or image_links.get("extraLarge")
     )
 
-    # 일부 링크는 http로 오기도 해서 https로 정리(가능하면)
     if isinstance(thumbnail, str) and thumbnail.startswith("http://"):
         thumbnail = "https://" + thumbnail[len("http://") :]
 
@@ -84,8 +83,3 @@ def fetch_google_books_thumbnail(title: str):
         "authors": vi.get("authors") or [],
         "raw_imageLinks": image_links,
     }
-
-
-if __name__ == "__main__":
-    isbn = "9788937461637"
-    result = fetch_google_books_thumbnail_by_isbn(isbn)
