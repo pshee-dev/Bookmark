@@ -3,13 +3,13 @@ import os
 import requests
 from ..errors import *
 
-# 코드 정리 필요 !!!
 load_dotenv()
 session = requests.Session()
 
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 GOOGLE_BOOKS_ENDPOINT = "https://www.googleapis.com/books/v1/volumes"
 
+# isbn 검색 시 검색결과에 썸네일이 누락되는 경우가 많아, isbn이 아닌 책 제목을 이용해 검색합니다. 
 def fetch_google_books_thumbnail(title: str):
     """
     책 제목으로 Google Books 검색 → 썸네일 URL을 뽑아서 반환.
