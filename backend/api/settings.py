@@ -133,20 +133,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
-INTERNAL_IPS = [
-    "127.0.0.1", 
-]
-
-AUTH_USER_MODEL = 'accounts.User' 
-
 # 정적파일 서빙할 폴더 경로 지정 
 STATIC_URL = '/static/'   # 템플릿에서 불러올 URL (정적 파일을 참조할 URL prefix)
 STATICFILES_DIRS = [ BASE_DIR / "static" ]   # 개발용 공용 static 경로
@@ -156,6 +142,20 @@ STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴�
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = 'media/'
 
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
+INTERNAL_IPS = [
+    "127.0.0.1", 
+]
+
+
+AUTH_USER_MODEL = 'accounts.User' 
 ACCOUNT_EMAIL_VERIFICATION = 'none' # dj-rest-auth 이메일 인증 비활성화
 
 # dj-rest-auth 커스텀한 시리얼라이저 등록
