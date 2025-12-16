@@ -15,6 +15,10 @@ class InvalidQuery(BookExceptionHandler):
     code = "invalid_query"
     http_status = 400
 
+class InvalidIsbn(BookExceptionHandler):
+    code = "invalid_isbn"
+    http_status = 400
+
 class MissingTTBKey(BookExceptionHandler):
     code = "missing_key_error"
     http_status = 500
@@ -26,3 +30,7 @@ class ExternalAPIError(BookExceptionHandler):
 class TimeoutError(BookExceptionHandler):
     code = "timeout"
     http_status = 504
+
+class NotFoundError(BookExceptionHandler):
+    code = "book_not_found"
+    http_status = 404
