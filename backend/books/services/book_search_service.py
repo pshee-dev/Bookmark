@@ -6,14 +6,17 @@ from ..errors import *
 import requests
 from ..utils import str_to_int
 from .book_thumnails_service import fetch_google_books_thumbnail
+from ..models import ExternalCategoryMapping
 
 load_dotenv()
+session = requests.Session()
 
 ALADIN_API_KEY = os.getenv("ALADIN_API_KEY")
 ALADIN_VERSION = "20131101"
 ALADIN_SEARCH_TARGET = "Book" # 국내도서로 검색결과 제한
-ALADIN_ITEM_SEARCH_URL = "https://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
+ALADIN_ITEM_SEARCH_URL = "https://www.aladin.co.kr/ttb/api/"
 
+#TODO 검색결과 개편: 검색 시 세트상품이 걸리지 않도록 자체 페이지네이션 구축. 세트상품의 경우 isbn값이 빈 문자열인 점을 이용.
 
 # 알라딘 api를 통해 사용자 검색어의 검색결과 리스트 반환 
 def search_books(keyword, field, max_result, page):
@@ -58,7 +61,7 @@ def search_books(keyword, field, max_result, page):
     
     try:
         # timeout: 알라딘이 느릴 때 무한정 기다리지 않도록 제한하는 값
-        response = requests.get(ALADIN_ITEM_SEARCH_URL, params=params, timeout=2)
+        response = session.get(ALADIN_ITEM_SEARCH_URL+'ItemSearch.aspx', params=params, timeout=2)
         # HTTP 상태코드가 200대가 아니면 예외 발생
         response.raise_for_status()
         # output=js로 JSON을 기대하므로 json()으로 파싱
@@ -103,3 +106,63 @@ def search_books(keyword, field, max_result, page):
             "results": results       # 결과 목록
         }
 
+def fetch_aladin_info_by_isbn(isbn: str) -> dict | None:
+    """
+    알라딘 TTB API를 이용해
+    - 제목(title)
+    - 저자(author)
+    - 출판사(publisher)
+    - 표지(cover)
+    - 페이지 수(itemPage)
+    를 가져오는 함수.
+
+    정상적으로 가져오면 dict 반환,
+    실패하면 None 반환.
+    """
+    
+    if not isbn:
+        raise InvalidIsbn(dev_message="isbn 파라미터 부재")
+    
+    params = {
+        "ttbkey": ALADIN_API_KEY,    
+        "itemIdType": "ISBN13",      
+        "ItemId": isbn,            
+        "output": "js",              
+        "Version": ALADIN_VERSION,
+        "OptResult": "itemPage",
+        
+    }
+
+    try:
+        res = session.get(ALADIN_ITEM_SEARCH_URL+'ItemLookUp.aspx', params=params, timeout=10)
+        res.raise_for_status()
+        data = res.json()
+    except requests.Timeout as e:
+        raise TimeoutError(dev_message="알라딘 API 응답 시간 초과", cause=e)
+    except requests.RequestException as e:
+        raise ExternalAPIError(dev_message="알라딘 API 호출 실패", cause=e) 
+    except ValueError as e:
+        raise ExternalAPIError(dev_message="알라딘 API 응답 -> JSON 변환 실패", cause=e) 
+
+    items = data.get("item")
+    if not items: 
+        raise NotFoundError(dev_message='isbn과 일치하는 알라딘 도서 부재')
+    item = items[0]
+    title = item.get("title")
+    
+    thumbnail_url = fetch_google_books_thumbnail(title).get("thumbnail")
+    cid = int(item.get("categoryId"))
+    category_mapping = ExternalCategoryMapping.objects.get(external_cid=cid) #TODO 일치하는 카테고리 없는 경우 에러처리, 알라딘이 아닌 경우 분기
+    category = category_mapping.category
+    return {
+        "isbn": isbn,
+        "title": title,
+        "author": item.get("author"),          
+        "publisher": item.get("publisher"),
+        "page": item.get("subInfo").get('itemPage'),
+        "category_id": category.pk,
+        "published_date": item.get('pubDate'),
+        "thumbnail": thumbnail_url
+    }
+    
+    
