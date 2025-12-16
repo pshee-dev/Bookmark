@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)10kg*-e2&2$7*^rx9^_3#jw1c$kmz=%#45hi-g7q8*@-nqs_&'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -35,6 +39,13 @@ INSTALLED_APPS = [
     'accounts',
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
+    'rest_framework.authtoken', # dj-rest-auth 관련 설정 - start
+    'dj_rest_auth',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'dj_rest_auth.registration', # dj-rest-auth 관련 설정 - end
     'debug_toolbar', # 디버깅할 때 참고할 자료를 제공하는 툴. 개발모드에서만 실행
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,6 +54,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+SITE_ID = 1 # dj-rest-auth 관련 설정
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +66,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware', # 디버그 툴바 관련 설정
+    'allauth.account.middleware.AccountMiddleware', # dj-rest-auth 관련 설정
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -123,21 +137,46 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+# 정적파일 서빙할 폴더 경로 지정 
+STATIC_URL = '/static/'   # 템플릿에서 불러올 URL (정적 파일을 참조할 URL prefix)
+STATICFILES_DIRS = [ BASE_DIR / "static" ]   # 개발용 공용 static 경로
+STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴더
+
+# 동적파일을 저장할 폴더 경로 지정
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = 'media/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 # 디버그 툴바가 로컬에서만 보이게끔 하는 보안 설정. 
 INTERNAL_IPS = [
     "127.0.0.1", 
 ]
 
-AUTH_USER_MODEL = 'accounts.User' 
 
-# 정적파일 서빙할 폴더 경로 지정 
-STATIC_URL = '/static/'   # 템플릿에서 불러올 URL (정적 파일을 참조할 URL prefix)
-STATICFILES_DIRS = [ BASE_DIR / "static" ]   # 개발용 공용 static 경로
-STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴더
+AUTH_USER_MODEL = 'accounts.User' 
+ACCOUNT_EMAIL_VERIFICATION = 'none' # dj-rest-auth 이메일 인증 비활성화
+
+# dj-rest-auth 커스텀한 시리얼라이저 등록
+REST_AUTH = {
+    'LOGIN_SERIALIZER': 'accounts.serializers.CustomLoginSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
+    'REGISTER_SERIALIZER': 'accounts.serializers.CustomSignupSerializer',
+}
+
+
+REST_FRAMEWORK = {
+    # Authentication
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    # permission
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny', # 전역 권한은 모든 사용자 접근 허용(AllowAny)
+    ],
+}
