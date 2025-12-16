@@ -17,7 +17,14 @@ ALADIN_ITEM_SEARCH_URL = "https://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
 
 # 알라딘 api를 통해 사용자 검색어의 검색결과 리스트 반환 
 def search_books(keyword, field, max_result, page):
-    
+    """
+    검색조건들을 문자열로 받아, 해당 키워드의 검색결과인 도서 정보 리스트를 반환한다.
+    \n
+    검색어(keyword), 
+    검색필드(field), 
+    페이지당 최대 개수(max_result), 
+    조회할 페이지(page), 
+    """
     # 유효성검사
     if len(keyword) < 2:
         raise InvalidQuery(user_message="검색어는 2글자 이상 입력해주세요.")
