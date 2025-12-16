@@ -58,17 +58,17 @@ def search_books(keyword, field, max_result, page):
     
     try:
         # timeout: 알라딘이 느릴 때 무한정 기다리지 않도록 제한하는 값
-        response = requests.get(ALADIN_ITEM_SEARCH_URL, params=params, timeout=8)
+        response = requests.get(ALADIN_ITEM_SEARCH_URL, params=params, timeout=2)
         # HTTP 상태코드가 200대가 아니면 예외 발생
         response.raise_for_status()
         # output=js로 JSON을 기대하므로 json()으로 파싱
         json_parsed_data = response.json()
     except requests.Timeout as e:
-        raise TimeoutError(dev_message="알라딘 API 응답 시간 초과")
+        raise TimeoutError(dev_message="알라딘 API 응답 시간 초과", cause=e)
     except requests.RequestException as e:
-        raise ExternalAPIError(dev_message="알라딘 API 호출 실패") from e
+        raise ExternalAPIError(dev_message="알라딘 API 호출 실패", cause=e) 
     except ValueError as e:
-        raise ExternalAPIError(dev_message="알라딘 API 응답 -> JSON 변환 실패") from e
+        raise ExternalAPIError(dev_message="알라딘 API 응답 -> JSON 변환 실패", cause=e) 
     
     page_size = len(json_parsed_data["item"])
     total_size = json_parsed_data["totalResults"]
@@ -87,7 +87,7 @@ def search_books(keyword, field, max_result, page):
             "thumbnail" : small_sized_thumbnail_url,
             "categoryId" : book["categoryId"],
             ### 추후 필요 시 추가
-            # "adult": book["adult"],
+            #"adult": book["adult"],
             #"salesPoint": book["salesPoint"],
             #"priceSales": book["priceSales"],
             #"priceStandard": book["priceStandard"],
