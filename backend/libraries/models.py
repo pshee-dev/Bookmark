@@ -1,3 +1,18 @@
 from django.db import models
+from django.conf import settings
+from books.models import Book
 
-# Create your models here.
+class Library(models.Model):
+    
+    class StatusEnum(models.TextChoices):
+        want = '읽고 싶은 책'
+        reading = '읽고 있는 책'
+        finished = '다 읽은 책'
+    
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='book')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user')
+    status = models.CharField(max_length=20, choices=StatusEnum.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateField(null=True)
+    finish_date = models.DateField(null=True)
+    rating = models.PositiveIntegerField(null=True, default=0)

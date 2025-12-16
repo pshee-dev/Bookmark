@@ -31,8 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'books',
     'accounts',
+    'books',
+    'libraries',
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
     'debug_toolbar', # 디버깅할 때 참고할 자료를 제공하는 툴. 개발모드에서만 실행
