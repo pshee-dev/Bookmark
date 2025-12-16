@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
@@ -9,6 +10,7 @@ from django.db.models import Count
 User = get_user_model()
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def profile(request, user_id):
     user_with_counts = User.objects.annotate(
         followings_count=Count('followings', distinct=True),
@@ -21,6 +23,7 @@ def profile(request, user_id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def follow(request, user_id):
     me = request.user
     member = get_object_or_404(User, id=user_id)
@@ -36,6 +39,7 @@ def follow(request, user_id):
             return Response(status=status.HTTP_200_OK)
         
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_following_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     followings = get_list_or_404(member.followings.all())
@@ -43,20 +47,24 @@ def get_following_list(request, user_id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_follower_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     followers = get_list_or_404(member.followers.all())
     serializer = FollowListSerializer(followers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_review_list(request, user_id):
     pass
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_galfy_list(request, user_id):
     pass
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_feed(request, user_id):
     pass

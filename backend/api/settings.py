@@ -171,4 +171,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # permission
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny', # 전역 권한은 모든 사용자 접근 허용(AllowAny)
+    ],
 }
