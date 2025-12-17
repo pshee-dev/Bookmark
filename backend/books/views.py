@@ -1,12 +1,9 @@
-from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404
 from .models import Book
-import requests
-from .serializers import BookSerializer, CategorySerializer
+from .serializers import BookSerializer
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .services.book_search_service import search_books, fetch_aladin_info_by_isbn
 from .errors import *
@@ -72,6 +69,7 @@ def review_list_and_create(request, book_id):
 
 def galfy_list_and_create(request, book_id):
     pass
+
 STATUS_MAP = {
     400: status.HTTP_400_BAD_REQUEST, 
     404: status.HTTP_404_NOT_FOUND,
