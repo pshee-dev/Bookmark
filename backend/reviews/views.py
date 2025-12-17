@@ -8,7 +8,6 @@ from books.models import Book
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 
-# POST/PUT/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
@@ -32,16 +31,17 @@ def list_and_create(request, book_id):
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def detail_and_update_and_delete(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
 
     if request.method == 'PATCH':
-        review = get_object_or_404(Review, id=review_id)
-        if review.user != request.user:
+        if not is_author(request, review):
             return Response({
                 "error": {
                     "code": "invalid_user",
                     "message": "잘못된 접근입니다."
                 }
-            }, status=STATUS_MAP[403])
+            }, status=HTTP_403_FORBIDDEN)
+
         serializer = ReviewUpdateSerializer(review, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -49,12 +49,27 @@ def detail_and_update_and_delete(request, review_id):
             ReviewSerializer(review).data,
             status=status.HTTP_200_OK
         )
-    return None #TODO get, delete 메서드일때의 반환 로직 추가
 
+    if request.method == 'DELETE':
+        if not is_author(request, review):
+            return Response({
+                "error": {
+                    "code": "invalid_user",
+                    "message": "잘못된 접근입니다."
+                }
+            }, status=HTTP_403_FORBIDDEN)
+        review.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # GET일 경우
+    return Response(
+        ReviewSerializer(review).data,
+        status=status.HTTP_200_OK
+    )
 
-#TODO 스테이터스맵 공통유틸로 빼기
-STATUS_MAP = {
-    401: status.HTTP_401_UNAUTHORIZED,
-    403: status.HTTP_403_FORBIDDEN,
-}
+# 추후 커스텀 퍼미션으로 정의하는 방식으로 리팩토링 가능
+def is_author(request, review):
+    if review.user != request.user:
+        return False
+    return True
+
