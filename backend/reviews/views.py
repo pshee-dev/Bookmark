@@ -3,12 +3,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.status import HTTP_403_FORBIDDEN
 from books.models import Book
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
-from django.conf import settings
 
 # POST/PUT/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
+# POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def list_and_create(request, book_id):
@@ -34,15 +35,6 @@ def detail_and_update_and_delete(request, review_id):
 
     if request.method == 'PATCH':
         review = get_object_or_404(Review, id=review_id)
-
-        # IsAuthenticatedOrReadOnly는 PATCH를 지원하지 않으므로 직접 검증
-        if not request.user.is_authenticated:
-            return Response({
-                "error": {
-                    "code": "unauthorized",
-                    "message": "현재 서비스 이용이 불가하오니, 나중에 다시 시도해 주세요."
-                }
-            }, status=STATUS_MAP[401])
         if review.user != request.user:
             return Response({
                 "error": {
