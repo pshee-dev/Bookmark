@@ -1,10 +1,8 @@
-from rest_framework import status
-from rest_framework.response import Response
 from dotenv import load_dotenv
 import os
 from ..errors import *
 import requests
-from ..utils import str_to_int
+from common.utils.safe_convert import str_to_int
 from .book_thumnails_service import fetch_google_books_thumbnail
 from ..models import ExternalCategoryMapping
 
@@ -164,5 +162,4 @@ def fetch_aladin_info_by_isbn(isbn: str) -> dict | None:
         "published_date": item.get('pubDate'),
         "thumbnail": thumbnail_url
     }
-    
     
