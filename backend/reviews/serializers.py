@@ -20,3 +20,7 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['title', 'content']
 
+class ReviewUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['title', 'content']

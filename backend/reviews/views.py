@@ -4,7 +4,9 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status
 from books.models import Book
-from .serializers import ReviewCreateSerializer, ReviewSerializer
+from .models import Review
+from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
+from django.conf import settings
 
 # POST/PUT/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
@@ -24,6 +26,41 @@ def list_and_create(request, book_id):
             status=status.HTTP_201_CREATED
         )
     return None #TODO get메서드일때의 리스트 반환 로직 추가
+
+
+@api_view(['GET', 'PATCH', 'DELETE'])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def detail_and_update_and_delete(request, review_id):
+
+    if request.method == 'PATCH':
+        review = get_object_or_404(Review, id=review_id)
+
+        # IsAuthenticatedOrReadOnly는 PATCH를 지원하지 않으므로 직접 검증
+        if not request.user.is_authenticated:
+            return Response({
+                "error": {
+                    "code": "unauthorized",
+                    "message": "현재 서비스 이용이 불가하오니, 나중에 다시 시도해 주세요."
+                }
+            }, status=STATUS_MAP[401])
+        if review.user != request.user:
+            return Response({
+                "error": {
+                    "code": "invalid_user",
+                    "message": "잘못된 접근입니다."
+                }
+            }, status=STATUS_MAP[403])
+        serializer = ReviewUpdateSerializer(review, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            ReviewSerializer(review).data,
+            status=status.HTTP_200_OK
+        )
+    return None #TODO get, delete 메서드일때의 반환 로직 추가
+
+
+
 #TODO 스테이터스맵 공통유틸로 빼기
 STATUS_MAP = {
     401: status.HTTP_401_UNAUTHORIZED,
