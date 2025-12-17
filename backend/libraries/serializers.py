@@ -26,7 +26,7 @@ class LibraryBookListSerializer(serializers.ModelSerializer):
 
 
 # [POST] 내 서재에 독서 상태 등록 - /library/
-class LibraryBookSerializer(serializers.ModelSerializer):
+class LibraryBookCreateSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     book = serializers.PrimaryKeyRelatedField(queryset=Book.objects.all())
 
