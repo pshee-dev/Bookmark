@@ -48,3 +48,11 @@ class LibraryBookSerializer(serializers.ModelSerializer):
 
 
 # [GET] 내 서재에 있는 도서 상세 조회 - /library/{library_id}
+
+
+# [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}
+class LibraryBookUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Library
+        fields = ('status', 'start_date', 'finish_date', 'rating')
+        
