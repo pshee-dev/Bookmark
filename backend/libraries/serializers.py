@@ -144,5 +144,5 @@ class LibraryBookDetailSerializer(serializers.ModelSerializer):
 
 # [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}
 class LibraryBookUpdateSerializer(LibraryBookBaseSerializer):
-    pass
+    pass # 상속받은 serializer에서 추가 필드 없음 (용도에 따른 serializer 네이밍 통일성을 위해 상속 구조 활용)
         
