@@ -1,28 +1,13 @@
-"""
-URL configuration for api project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
 from django.urls import path
 from . import views
 
 app_name = 'books'
+
 urlpatterns = [
-    path('', views.create, name='create'),
+    # isbn으로 책 존재여부 확인하여 없으면 생성 후 상세정보 반환
+    path('resolve/', views.resolve_by_isbn, name='resolve'),
+    path('search/', views.search, name='search'),
     path('<int:book_id>/reviews/', views.review_list_and_create, name='reviews'),
     path('<int:book_id>/galfies/', views.galfy_list_and_create, name='galfies'),
     path('<int:book_id>/', views.detail, name='detail'),
 ]
-
