@@ -25,7 +25,7 @@ class LibraryBookCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating', 'book', 'user')
+        fields = ('status', 'start_date', 'finish_date', 'rating', 'current_page', 'book', 'user')
         
         # 유니크제약조건 유효성 검사
         validators = [
@@ -52,7 +52,7 @@ class LibraryBookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating', 'book')
+        fields = ('status', 'start_date', 'finish_date', 'rating', 'current_page', 'book')
 
     # Todo: 연결된 리뷰/갈피 데이터 불러오기
 
@@ -61,5 +61,5 @@ class LibraryBookDetailSerializer(serializers.ModelSerializer):
 class LibraryBookUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating')
+        fields = ('status', 'start_date', 'finish_date', 'current_page', 'rating')
         

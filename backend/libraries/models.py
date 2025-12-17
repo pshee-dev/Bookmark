@@ -16,6 +16,7 @@ class Library(models.Model):
     start_date = models.DateField(null=True)
     finish_date = models.DateField(null=True)
     rating = models.PositiveIntegerField(null=True, default=0)
+    current_page = models.PositiveIntegerField(null=True, default=0)
 
     class Meta:
         # 유니크제약조건 설정(uesr, book)
