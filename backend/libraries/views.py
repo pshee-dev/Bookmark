@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
-from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer
+from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
 
 @api_view(['GET', 'POST'])
@@ -31,7 +31,8 @@ def library_book(request, library_id):
 
     # 독서 상태 상세 조회
     if request.method == 'GET':
-        pass
+        serializer = LibraryBookDetailSerializer(library)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 독서 상태 수정
     elif request.method == 'PATCH':

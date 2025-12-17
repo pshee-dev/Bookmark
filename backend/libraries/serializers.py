@@ -3,13 +3,6 @@ from rest_framework.validators import UniqueTogetherValidator
 from .models import Library
 from books.models import Book, Category
 
-# 카테고리 이름 시리얼라이저
-class CategoryNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ('name',)
-
-
 # 서재에서 사용할 책 정보 기본 시리얼라이저
 class BookBaseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,6 +41,20 @@ class LibraryBookCreateSerializer(serializers.ModelSerializer):
 
 
 # [GET] 내 서재에 있는 도서 상세 조회 - /library/{library_id}
+class LibraryBookDetailSerializer(serializers.ModelSerializer):
+    
+    class BookDetailSerializer(BookBaseSerializer):
+        category = serializers.CharField(source='category.name', read_only=True)
+        class Meta(BookBaseSerializer.Meta):
+            fields = BookBaseSerializer.Meta.fields + ('isbn', 'category')
+
+    book = BookDetailSerializer(read_only=True)
+
+    class Meta:
+        model = Library
+        fields = ('status', 'start_date', 'finish_date', 'rating', 'book')
+
+    # Todo: 연결된 리뷰/갈피 데이터 불러오기
 
 
 # [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}
