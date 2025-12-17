@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'reviews',
     'books',
     'accounts',
     'django_extensions', # 장고 확장 기능 제공하는 툴
