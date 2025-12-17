@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator, EmptyPage
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -5,9 +6,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_403_FORBIDDEN
 from books.models import Book
+from common.utils.paginations import DefaultPageNumberPagination
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 
+#TODO 페이지네이션 코드 공통유틸로 분리 및 구조 리팩토링
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
@@ -25,7 +28,41 @@ def list_and_create(request, book_id):
             ReviewSerializer(review).data,
             status=status.HTTP_201_CREATED
         )
-    return None #TODO get메서드일때의 리스트 반환 로직 추가
+
+    # GET일 경우 리뷰 리스트 반환
+    sort_direction = request.query_params.get('sort-direction', 'desc'),
+    sort_field = request.query_params.get('sort-field', 'created_at')
+
+    # 정렬 기준 필드
+    SORT_TYPE_MAP = {
+        'popularity': 'popularity',
+        'created_at': 'created_at',
+    }
+    # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 기본값 이걸로 변경
+    sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
+
+    # 정렬 방향
+        # - 장고 ORM은 정렬필드 앞에 -가 붙으면 내림차순으로 작동한다.
+    if sort_direction != 'asc':
+        sort_field = f'-{sort_field}'
+
+
+    queryset = Review.objects.all().order_by(sort_field)
+
+    # TODO likes 모델 생성한 후 인기도순 로직 점검
+    ''' 
+    if sort_field == 'popularity':
+        queryset = queryset.annotate(
+            like_count=Count('likes')
+        ) 
+    '''
+
+    paginator = DefaultPageNumberPagination()
+    page = paginator.paginate_queryset(queryset, request)
+
+    serializer = ReviewSerializer(page, many=True)
+
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -61,7 +98,7 @@ def detail_and_update_and_delete(request, review_id):
         review.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # GET일 경우
+    # GET일 경우 리뷰 상세정보 반환
     return Response(
         ReviewSerializer(review).data,
         status=status.HTTP_200_OK
