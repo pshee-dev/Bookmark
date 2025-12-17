@@ -24,3 +24,8 @@ def list_and_create(request, book_id):
             status=status.HTTP_201_CREATED
         )
     return None #TODO get메서드일때의 리스트 반환 로직 추가
+#TODO 스테이터스맵 공통유틸로 빼기
+STATUS_MAP = {
+    401: status.HTTP_401_UNAUTHORIZED,
+    403: status.HTTP_403_FORBIDDEN,
+}
