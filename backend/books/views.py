@@ -62,12 +62,6 @@ def resolve_by_isbn(request):
     if serializer.is_valid(raise_exception=True):
         serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-def review_list_and_create(request, book_id):
-    pass
-
-def galfy_list_and_create(request, book_id):
-    pass
 
 STATUS_MAP = {
     400: status.HTTP_400_BAD_REQUEST, 
