@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from .models import Library
 from books.models import Book, Category
 
@@ -24,3 +25,27 @@ class LibraryBookListSerializer(serializers.ModelSerializer):
         model = Library
         fields = ('status', 'start_date', 'finish_date', 'rating')
 
+
+# [POST] 내 서재에 독서 상태 등록 - /library/
+class LibraryBookSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    book = serializers.PrimaryKeyRelatedField(queryset=Book.objects.all())
+
+    class Meta:
+        model = Library
+        fields = ('status', 'start_date', 'finish_date', 'rating', 'book', 'user')
+        
+        # 유니크제약조건 유효성 검사
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Library.objects.all(),
+                fields=['user', 'book'],
+                message="이미 내 서재에 등록된 책입니다."
+            )
+        ]
+
+        # Todo: start_date 없이 finish_date 설정 불가
+        # Todo: rating 범위 (0~5)
+
+
+# [GET] 내 서재에 있는 도서 상세 조회 - /library/{library_id}

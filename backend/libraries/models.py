@@ -16,3 +16,11 @@ class Library(models.Model):
     start_date = models.DateField(null=True)
     finish_date = models.DateField(null=True)
     rating = models.PositiveIntegerField(null=True, default=0)
+
+    class Meta:
+        # 유니크제약조건 설정(uesr, book)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'book'], name="unique_user_book"
+            )
+        ]
