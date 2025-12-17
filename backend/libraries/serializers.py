@@ -12,7 +12,6 @@ class CategoryNameSerializer(serializers.ModelSerializer):
 
 # 서재에서 사용할 책 정보 기본 시리얼라이저
 class BookBaseSerializer(serializers.ModelSerializer):
-    category = CategoryNameSerializer(read_only=True)
     class Meta:
         model = Book
         fields = ('title', 'author', 'publisher')
@@ -23,7 +22,7 @@ class LibraryBookListSerializer(serializers.ModelSerializer):
     book = BookBaseSerializer(read_only=True)
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating')
+        fields = ('status', 'start_date', 'finish_date', 'rating', 'book')
 
 
 # [POST] 내 서재에 독서 상태 등록 - /library/
