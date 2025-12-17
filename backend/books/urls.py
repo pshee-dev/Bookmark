@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from reviews.views import review_list_and_create
+from reviews.views import list_and_create as review_list_and_create
 
 app_name = 'books'
 

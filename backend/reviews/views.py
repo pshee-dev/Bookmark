@@ -9,7 +9,7 @@ from .serializers import ReviewCreateSerializer, ReviewSerializer
 # POST/PUT/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
-def review_list_and_create(request, book_id):
+def list_and_create(request, book_id):
     if request.method == 'POST':
         book = get_object_or_404(Book, pk=book_id)
         serializer = ReviewCreateSerializer(data=request.data)
