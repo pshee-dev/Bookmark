@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator, EmptyPage
+from django.core.serializers import serialize
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -6,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_403_FORBIDDEN
 from books.models import Book
-from common.utils.paginations import DefaultPageNumberPagination
+from common.utils.paginations import apply_pagination
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 
@@ -30,7 +31,8 @@ def list_and_create(request, book_id):
         )
 
     # GET일 경우 리뷰 리스트 반환
-    sort_direction = request.query_params.get('sort-direction', 'desc'),
+    queryset = Review.objects.all()
+    sort_direction = request.query_params.get('sort-direction', 'desc')
     sort_field = request.query_params.get('sort-field', 'created_at')
 
     # 정렬 기준 필드
@@ -38,17 +40,9 @@ def list_and_create(request, book_id):
         'popularity': 'popularity',
         'created_at': 'created_at',
     }
-    # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 기본값 이걸로 변경
+
+    # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
     sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
-
-    # 정렬 방향
-        # - 장고 ORM은 정렬필드 앞에 -가 붙으면 내림차순으로 작동한다.
-    if sort_direction != 'asc':
-        sort_field = f'-{sort_field}'
-
-
-    queryset = Review.objects.all().order_by(sort_field)
-
     # TODO likes 모델 생성한 후 인기도순 로직 점검
     ''' 
     if sort_field == 'popularity':
@@ -57,9 +51,7 @@ def list_and_create(request, book_id):
         ) 
     '''
 
-    paginator = DefaultPageNumberPagination()
-    page = paginator.paginate_queryset(queryset, request)
-
+    page, paginator = apply_pagination(request, queryset, sort_field, sort_direction)
     serializer = ReviewSerializer(page, many=True)
 
     return paginator.get_paginated_response(serializer.data)
