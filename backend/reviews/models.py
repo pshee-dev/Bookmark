@@ -26,4 +26,4 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return f"\n 도서 이름: {self.book}\n리뷰 제목: {self.title}\n작성자: f'{self.user.last_name}{self.user.first_name}' "
+        return f"\n 도서 이름: {self.book}\n리뷰 제목: {self.title}\n작성자: f'{self.user.full_name}' "
