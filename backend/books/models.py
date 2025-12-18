@@ -39,3 +39,9 @@ class ExternalCategoryMapping(models.Model):
     
     class Meta:
         db_table = 'books_external_category_mapping'
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "external_cid"], # 한 cid 출처에서 같은 cid가 존재할 수 없음
+                name="uq_ext_category_map_provider_cid", # 마이그레이션 시 식별용
+            )
+        ]
