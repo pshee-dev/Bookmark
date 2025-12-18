@@ -11,4 +11,4 @@ class Galfy(models.Model):
     book = models.ForeignKey(Book, on_delete=models.PROTECT)
 
     def __str__(self):
-        return f"\n 도서 이름: {self.book}\n작성자: {self.user.nickname}\n갈피 내용: {self.content}"
+        return f"\n 도서 이름: {self.book}\n작성자: {self.user.username}\n갈피 내용: {self.content}"
