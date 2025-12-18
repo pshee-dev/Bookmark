@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
 from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
+from common.utils.paginations import apply_pagination
 
 
 @api_view(['GET', 'POST'])
@@ -31,20 +32,18 @@ def library_book_list(request):
             'rating': 'rating',
             'title': 'book__title',
         }
+        # sort_type: 정렬 기준
         sort_type = request.query_params.get('sort-type', 'created_at')
-        order_field = SORT_TYPE_MAP.get(sort_type, 'created_at')
+        sort_field = SORT_TYPE_MAP.get(sort_type, 'created_at')
 
         # sort_direction: 정렬 방향
         sort_direction = request.query_params.get('sort-direction', 'asc')
-        if sort_direction == 'asc':
-            ordering = order_field
-        else:
-            ordering = f'-{order_field}'
-
-        libraries = libraries.select_related('book').order_by(ordering)
         
-        serializer = LibraryBookListSerializer(libraries, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # pagination 적용
+        page, paginator = apply_pagination(request, libraries, sort_field, sort_direction, 'limit')   
+        serializer = LibraryBookListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
 
     # 독서 상태 등록
     elif request.method == 'POST':
