@@ -9,5 +9,10 @@ class User(AbstractUser):
     followings = models.ManyToManyField('self', symmetrical=False, related_name='followers')
     profile_img = models.ImageField(upload_to=profile_image_path, blank=True)
 
-    def __str__(self):
+    @property
+    def full_name(self):
         return f'{self.last_name}{self.first_name}'
+
+    def __str__(self):
+        return self.full_name
+    
