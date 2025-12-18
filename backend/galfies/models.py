@@ -1,0 +1,14 @@
+from django.conf import settings
+
+from books.models import *
+
+class Galfy(models.Model):
+    page_number = models.IntegerField()
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f"\n 도서 이름: {self.book}\n작성자: {self.user.nickname}\n갈피 내용: {self.content}"
