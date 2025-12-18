@@ -25,7 +25,7 @@ def apply_pagination(request, queryset, sort_field, sort_direction='desc'):
 
     queryset = queryset.order_by(sort_field)
     paginator = DefaultPageNumberPagination()
-    page, paginator = paginator.paginate_queryset(queryset, request)
+    page = paginator.paginate_queryset(queryset, request)
     return page, paginator
 
 
