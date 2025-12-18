@@ -6,12 +6,43 @@ from django.shortcuts import get_list_or_404, get_object_or_404
 from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
 
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def library_book_list(request):
     # 내 서재 도서 목록 조회
     if request.method == 'GET':
-        libraries = Library.objects.filter(user=request.user).select_related('book')
+        # [status] status 파라미터에 의해 상태 필터링
+        reading_status = request.query_params.get('status', Library.StatusEnum.reading.value)
+        if reading_status not in Library.StatusEnum.values: 
+            reading_status = Library.StatusEnum.reading.value
+        libraries = Library.objects.filter(user=request.user, status=reading_status)
+        
+        # [sort] 정렬 관련 파라미터에 의해 쿼리셋 정렬
+        '''
+        request 값을 그대로 order_by에 사용할 경우 SQL Injection 공격에 취약함
+        허용한 값에 한해서 존재 여부 확인 후 매핑하는 방식이 안전함
+        => 화이트리스트 방식 (허용한 값만 사용하고, 나머지는 무시)
+        '''
+        # SORT_TYPE_MAP: 정렬 기준 매핑할 딕셔너리 생성
+        SORT_TYPE_MAP = {
+            'created_at': 'created_at',
+            'start_date': 'start_date',
+            'rating': 'rating',
+            'title': 'book__title',
+        }
+        sort_type = request.query_params.get('sort-type', 'created_at')
+        order_field = SORT_TYPE_MAP.get(sort_type, 'created_at')
+
+        # sort_direction: 정렬 방향
+        sort_direction = request.query_params.get('sort-direction', 'asc')
+        if sort_direction == 'asc':
+            ordering = order_field
+        else:
+            ordering = f'-{order_field}'
+
+        libraries = libraries.select_related('book').order_by(ordering)
+        
         serializer = LibraryBookListSerializer(libraries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -5,9 +5,10 @@ from books.models import Book
 class Library(models.Model):
     
     class StatusEnum(models.TextChoices):
-        want = '읽고 싶은 책'
-        reading = '읽고 있는 책'
-        finished = '다 읽은 책'
+        # key = 'value', 'label'
+        want = 'want', '읽고 싶은 책'
+        reading = 'reading', '읽고 있는 책'
+        finished = 'finished', '다 읽은 책'
     
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='book')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user')
