@@ -1,6 +1,6 @@
 from django.conf import settings
-
-from books.models import *
+from django.db import models
+from books.models import Book
 
 
 class Review(models.Model):
@@ -12,4 +12,4 @@ class Review(models.Model):
     book = models.ForeignKey(Book, on_delete=models.PROTECT)
 
     def __str__(self):
-        return f"\n 도서 이름: {self.book}\n리뷰 제목: {self.title}\n작성자: {self.user.nickname} "
+        return f"\n 도서 이름: {self.book}\n리뷰 제목: {self.title}\n작성자: {self.user.username} "
