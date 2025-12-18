@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/v1/users/', include('accounts.urls')), # 인증 관련 경로보다 아래에 위치해야함
     path('api/v1/books/', include('books.urls', namespace='books'), name='books'), 
     path('api/v1/libraries/', include('libraries.urls')),
+    path('api/v1/reviews/', include('reviews.urls', namespace='reviews'), name='reviews'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

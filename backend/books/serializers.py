@@ -5,21 +5,23 @@ class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
-        read_only_fields = ["id"]
+        read_only_fields = ['id']
 
 class BookSerializer(ModelSerializer):
-    category_id = PrimaryKeyRelatedField(
-        source="category",
-        queryset=Category.objects.all(),
-        write_only=True
-    )
     category = CategorySerializer(read_only=True)
     class Meta:
         model = Book
         fields = [
             'id', 'title', 'author', 'publisher', 'published_date', 
-            'isbn', 'page', 'thumbnail', 'category_id', 'category'
+            'isbn', 'page', 'thumbnail', 'category'
         ]
-        read_only_fields = ["id"]
-    #TODO 유효성검사 로직 필요
-    
+        read_only_fields = ['id']
+
+class BookSummarySerializer(ModelSerializer):
+    class Meta:
+        model = Book
+        fields = [
+            'id', 'title', 'author', 'thumbnail'
+        ]
+        read_only_fields = ['id']
+
