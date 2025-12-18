@@ -11,7 +11,6 @@ from common.utils.paginations import apply_pagination
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 
-#TODO 페이지네이션 코드 공통유틸로 분리 및 구조 리팩토링
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
