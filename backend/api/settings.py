@@ -35,8 +35,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'books',
     'accounts',
+    'books',
+    'reviews',
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
     'rest_framework.authtoken', # dj-rest-auth 관련 설정 - start

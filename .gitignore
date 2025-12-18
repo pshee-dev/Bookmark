@@ -282,3 +282,6 @@ npm-debug.log
 yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/python,django,vue,vuejs
+
+# IntelliJ / PyCharm 관련 설정 무시
+.idea
