@@ -8,8 +8,14 @@ class Review(models.Model):
     content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    book = models.ForeignKey(Book, on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE,
+                             related_name='reviews',
+                             )
+    book = models.ForeignKey(Book,
+                             on_delete=models.PROTECT,
+                             related_name='reviews',
+                             )
 
     def __str__(self):
         return f"\n 도서 이름: {self.book}\n리뷰 제목: {self.title}\n작성자: {self.user.username} "
