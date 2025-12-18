@@ -23,7 +23,6 @@ class Book(models.Model):
     def __str__(self):
         return self.title
 
-#TODO 복합유니크 걸어야함 
 class ExternalCategoryMapping(models.Model):
     provider = models.CharField(max_length=30)  # 알라딘
     external_cid = models.CharField(max_length=50, blank=True)
