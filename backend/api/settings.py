@@ -37,6 +37,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'accounts',
     'books',
+    'libraries',
     'reviews',
     'galfies',
     'django_extensions', # 장고 확장 기능 제공하는 툴
