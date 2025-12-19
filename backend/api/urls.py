@@ -27,9 +27,9 @@ urlpatterns = [
     path('api/v1/accounts/signup/', include('dj_rest_auth.registration.urls')),
     path('api/v1/accounts/', include('dj_rest_auth.urls')),
     path('api/v1/users/', include('accounts.urls')), # 인증 관련 경로보다 아래에 위치해야함
-    path('api/v1/books/', include('books.urls', namespace='books'), name='books'),
-    path('api/v1/reviews/', include('reviews.urls', namespace='reviews'), name='reviews'),
-    path('api/v1/galfies/', include('galfies.urls', namespace='galfies'), name='galfies'),
+    path('api/v1/books/', include('books.urls')),
+    path('api/v1/reviews/', include('reviews.urls')),
+    path('api/v1/galfies/', include('galfies.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
