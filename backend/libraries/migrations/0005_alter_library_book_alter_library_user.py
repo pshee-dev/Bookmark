@@ -9,24 +9,19 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('books', '0011_externalcategorymapping_uq_ext_category_map_provider_cid'),
-        ('galfies', '0001_initial'),
+        ('libraries', '0004_alter_library_status'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='galfy',
+            model_name='library',
             name='book',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='galfies', to='books.book'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='library', to='books.book'),
         ),
         migrations.AlterField(
-            model_name='galfy',
-            name='page_number',
-            field=models.IntegerField(null=True),
-        ),
-        migrations.AlterField(
-            model_name='galfy',
+            model_name='library',
             name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='galfies', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='library', to=settings.AUTH_USER_MODEL),
         ),
     ]
