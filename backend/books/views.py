@@ -1,21 +1,21 @@
 from django.shortcuts import get_object_or_404
 from .models import Book
-from .serializers import BookSerializer
+from .serializers import BookSerializer, BookListSerializer
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
-from .services.book_search_service import search_books, fetch_aladin_info_by_isbn
+from .services.book_search_service import search_books
 from .errors import *
 
 @api_view(['GET'])
 def search(request):
     keyword = (request.query_params.get("keyword") or "").strip()
-    field = (request.query_params.get("field") or "title").strip().lower()
-    page_size = request.query_params.get("page_size", '10')
-    page = request.query_params.get("page_size", '1')
+    field = (request.query_params.get("field") or "title").strip().lower() # title or author
+    page_size = request.query_params.get("page_size", '10') # 기본값 10, 최대값 40. 1미만/40초과 시 1/최대값으로 대체.
+    page = request.query_params.get("page", '1') # 기본값 1. 입력값이 1 미만일 시, 기본값으로 대체.
     try:
         search_results = search_books(keyword, field, page_size, page)
-        return Response(search_results, status=status.HTTP_200_OK)
+        return Response(BookListSerializer(search_results).data, status=status.HTTP_200_OK)
     except BookExceptionHandler as e:
         return Response({
             "error": {
@@ -46,7 +46,7 @@ def resolve_by_isbn(request):
         serializer = BookSerializer(book.get())
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    # 책 정보가 db에 저장되어있지 않을 경우 새로 생성
+    '''# 책 정보가 db에 저장되어있지 않을 경우 새로 생성
     try:
         book_info = fetch_aladin_info_by_isbn(isbn) 
     except BookExceptionHandler as e :
@@ -61,7 +61,7 @@ def resolve_by_isbn(request):
     
     if serializer.is_valid(raise_exception=True):
         serializer.save()
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)'''
 
 STATUS_MAP = {
     400: status.HTTP_400_BAD_REQUEST, 
