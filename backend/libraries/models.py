@@ -10,8 +10,8 @@ class Library(models.Model):
         reading = 'reading', '읽고 있는 책'
         finished = 'finished', '다 읽은 책'
     
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='book')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='library')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='library')
     status = models.CharField(max_length=20, choices=StatusEnum.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     start_date = models.DateField(null=True)
