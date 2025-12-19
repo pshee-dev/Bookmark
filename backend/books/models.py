@@ -23,7 +23,6 @@ class Book(models.Model):
     def __str__(self):
         return self.title
 
-#TODO 복합유니크 걸어야함 
 class ExternalCategoryMapping(models.Model):
     provider = models.CharField(max_length=30)  # 알라딘
     external_cid = models.CharField(max_length=50, blank=True)
@@ -39,3 +38,9 @@ class ExternalCategoryMapping(models.Model):
     
     class Meta:
         db_table = 'books_external_category_mapping'
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "external_cid"], # 한 cid 출처에서 같은 cid가 존재할 수 없음
+                name="uq_ext_category_map_provider_cid", # 마이그레이션 시 식별용
+            )
+        ]
