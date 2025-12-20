@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'libraries',
     'reviews',
     'galfies',
+    'comments',
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
     'rest_framework.authtoken', # dj-rest-auth 관련 설정 - start
