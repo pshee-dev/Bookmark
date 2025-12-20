@@ -6,17 +6,17 @@ from .models import Book, Category
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
-        read_only_fields = ['id']
+        fields = ["id", "name"]
+        read_only_fields = ["id"]
 
 class BookSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     class Meta:
         model = Book
         fields = [
-            'id', 'title', 'author', 'thumbnail', 'category', 'publisher', 'published_date', 'page', 'isbn',
+            "id", "title", "author", "thumbnail", "category", "publisher", "published_date", "page", "isbn",
         ]
-        read_only_fields = ['id']
+        read_only_fields = ["id"]
 
 class BookListSerializer(serializers.Serializer):
     keyword = serializers.CharField()  # 검색어
@@ -27,3 +27,11 @@ class BookListSerializer(serializers.Serializer):
 
     class Meta:
         fields = ["keyword", "field", "current_page", "page_size", "results"]
+
+class BookSummarySerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    class Meta:
+        model = Book
+        fields = [
+            "id", "title", "author", "thumbnail", "category"]
+        read_only_fields = ["id"]

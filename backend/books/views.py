@@ -38,7 +38,7 @@ def detail(request, book_id):
     serializer = BookSerializer(book)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['POST'])
+@api_view(['GET','POST'])
 def resolve_by_isbn(request):
     """
     검색된 책 리스트 중 하나를 선택 시, 해당 요소 isbn 정보로 db 내 존재여부를 확인한 후 \n

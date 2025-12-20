@@ -52,8 +52,7 @@ def search_books(keyword, field, max_result, page):
     if field not in ("title", "author"):
         raise InvalidQuery(user_message="검색 타입이 올바르지 않습니다.")
 
-    max_result = str_to_int(max_result, default=10)
-    max_result = max(1, min(max_result, 40))  # 1과 40 사이로 제한
+    max_result = str_to_int(max_result, default=10, min_v=1, max_v=40) # 1과 40 사이로 제한
 
     field_map = {
         "title": "intitle",
@@ -180,6 +179,7 @@ def parse_google_books_data(data_list):
                 "title" : str,
                 "isbn" : str,
                 "author" : str,
+                "publisher": publisher, 
                 "published_date" : str,
                 "thumbnail" : str,
                 "category" : Category,
@@ -204,7 +204,7 @@ def parse_google_books_data(data_list):
         book_page = volume_info.get("pageCount") or -1 # 결측치 임시 처리
 
         all_book_isbns = volume_info.get("industryIdentifiers") or {}
-        isbn_13 = ""
+        isbn_13 = None
         for isbn_N in all_book_isbns: # ISBN 종류
             if isbn_N.get("type") == "ISBN_13":
                 isbn_13 = isbn_N.get("identifier")
