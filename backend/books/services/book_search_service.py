@@ -21,10 +21,29 @@ def search_books(keyword, field, max_result, page):
     """
     검색조건들을 문자열로 받아, 해당 키워드의 검색결과인 도서 정보 리스트를 반환한다.
     \n
-    검색어(keyword), 
-    검색필드(field), 
-    페이지당 최대 개수(max_result), 
-    조회할 페이지(page), 
+    파라미터:
+        검색어(keyword),
+        검색필드(field),
+        페이지당 최대 개수(max_result),
+        조회할 페이지(page)
+
+    반환값 형태: {
+            "keyword": str,        # 사용자가 검색한 검색어 \n
+            "field": str,          # 검색한 필드(title/author) \n
+            "current_page": int,   # 현재 페이지 \n
+            "page_size": int,      # 현재 조회한 페이지에 들어있는 요소 개수 \n
+            "results": [{
+                            "title" : str, \n
+                            "isbn" : str, \n
+                            "author" : str, \n
+                            "publisher": publisher, \n
+                            "published_date" : str, \n
+                            "thumbnail" : str, \n
+                            "category" : Category, \n
+                            "page" : int, \n
+                        }, ...]
+            }
+
     """
     # 입력 값 검증
     if len(keyword) < 2:
@@ -43,9 +62,6 @@ def search_books(keyword, field, max_result, page):
     field = field_map.get(field, "intitle")  # 기본적으로 제목(title) 검색
     page = str_to_int(page, default=1)
 
-    if not GOOGLE_BOOKS_API_KEY:
-        raise MissingTTBKey(dev_message="구글북스 API Key 누락")
-
     params = {
         "q": f"{field}:{keyword}",
         "maxResults": max_result,
@@ -53,6 +69,93 @@ def search_books(keyword, field, max_result, page):
         "startIndex": page,
         "key": GOOGLE_BOOKS_API_KEY,
     }
+    json_parsed_data = fetch_google_books_api(params)
+    parsed_results = parse_google_books_data(json_parsed_data)
+
+    page_size = len(parsed_results)
+    if page_size == 0: # 검색결과 없을 시
+        return {
+            "keyword": "",        # 사용자가 검색한 검색어
+            "field": "",          # 검색한 필드(title/author)
+            "current_page": 1,            # 현재 페이지
+            "page_size": 0,  # 현재 조회한 페이지에 들어있는 요소 개수
+            "results": [],       # 결과 목록
+        }
+
+    return {
+            "keyword": keyword,        # 사용자가 검색한 검색어
+            "field": field,          # 검색한 필드(title/author)
+            "current_page": page,            # 현재 페이지
+            "page_size": page_size,  # 현재 조회한 페이지에 들어있는 요소 개수
+            "results": parsed_results,       # 결과 목록
+            }
+
+def get_book_info_by_isbn(isbn: str):
+    if not isbn:
+        raise InvalidIsbn(dev_message="isbn 파라미터 부재")
+
+    params = {
+        "q": f"isbn:{isbn}",
+        "key": GOOGLE_BOOKS_API_KEY,
+    }
+    json_parsed_data = fetch_google_books_api(params)
+    parsed_data = parse_google_books_data(json_parsed_data)
+    if parsed_data:
+        return parsed_data[0] #단건 검색이므로 첫 번째 요소를 꺼내서 반환
+    else:
+        raise InvalidIsbn(dev_message="isbn이 일치하는 도서가 존재하지 않음.")
+
+
+def get_aladin_category_cid_by_isbn_13(isbn: str) -> Category:
+    """
+    도서 isbn 값을 이용해 cid 값을 찾아낸 후, 자체 카테고리로 매핑한다.
+        - cid 값이 결측치이거나 자체 카테고리와 매핑되는 분류가 아닐 경우, pk 22(일본서적, 기타)인 Category로 매핑된다.
+    반환값: Category
+    """
+    category_others = Category.objects.get(pk=22)
+    if not isbn:
+        raise InvalidIsbn(dev_message="isbn 파라미터 부재")
+
+    params = {
+        "ttbkey": ALADIN_API_KEY,
+        "itemIdType": "ISBN13",
+        "ItemId": isbn,
+        "output": "js",
+        "Version": ALADIN_VERSION,
+        "OptResult": "itemPage",
+
+    }
+
+    try:
+        res = session.get(ALADIN_ITEM_SEARCH_URL+'ItemLookUp.aspx', params=params, timeout=10)
+        res.raise_for_status()
+        data = res.json()
+    except requests.Timeout as e:
+        raise TimeoutError(dev_message="알라딘 API 응답 시간 초과", cause=e)
+    except requests.RequestException as e:
+        raise ExternalAPIError(dev_message="알라딘 API 호출 실패", cause=e)
+    except ValueError as e:
+        raise ExternalAPIError(dev_message="알라딘 API 응답 -> JSON 변환 실패", cause=e)
+
+    items = data.get("item")
+
+    if not items: # isbn과 일치하는 도서 부재 시 빈 딕셔너리 반환
+        return category_others
+    item = items[0]
+
+    cid = item.get("categoryId")
+    if not cid:
+        return category_others
+    category_mapping = ExternalCategoryMapping.objects.filter(external_cid=cid)
+    if category_mapping:
+        category = category_mapping[0].category
+    else:
+        category = category_others
+    return category
+
+def fetch_google_books_api(params):
+    if not GOOGLE_BOOKS_API_KEY:
+        raise MissingTTBKey(dev_message="구글북스 API Key 누락")
 
     # api 응답 받아오기
     try:
@@ -60,9 +163,9 @@ def search_books(keyword, field, max_result, page):
         response = session.get(GOOGLE_BOOKS_SEARCH_URL, params=params, timeout=2)
         # HTTP 상태코드가 200대가 아니면 예외 발생
         response.raise_for_status()
-        # output=js로 JSON을 기대하므로 json()으로 파싱
-        json_parsed_data = response.json()
+        # output=js로 JSON을 기대하므로 json()으로 파싱해서 반환
         print(response.request.url)
+        return response.json()
     except requests.Timeout as e:
         raise TimeoutError(dev_message="구글북스 API 응답 시간 초과", cause=e)
     except requests.RequestException as e:
@@ -70,20 +173,25 @@ def search_books(keyword, field, max_result, page):
     except ValueError as e:
         raise ExternalAPIError(dev_message="구글북스 API 응답 -> JSON 변환 실패", cause=e)
 
-    if not json_parsed_data["items"]:
-        return {
-            "query": "",        # 사용자가 검색한 검색어
-            "field": "",          # 검색한 필드(title/author)
-            "page": 1,            # 현재 페이지
-            "page_size": 0,  # 현재 조회한 페이지에 들어있는 요소 개수
-            "results": [],       # 결과 목록
-        }
-    page_size = len(json_parsed_data["items"])
-    # total_size = json_parsed_data["totalItems"] 구글북스의 토탈사이즈는 정확하지 않음.
+def parse_google_books_data(data_list):
+    """
+    구글북스 api로 받아온 도서 검색결과를 Book 모델에 맞는 데이터로 변환한다.
+    :return: [{
+                "title" : str,
+                "isbn" : str,
+                "author" : str,
+                "published_date" : str,
+                "thumbnail" : str,
+                "category" : Category,
+                "page" : int,
+            }, ...]
+    """
+    # 전달된 구글북스 검색결과값이 비어있을 경우, 빈 리스트 반환
+    if not data_list["items"]:
+        return []
 
     results = []
-
-    for book in json_parsed_data["items"]:
+    for book in data_list["items"]:
         volume_info = book.get("volumeInfo") or {}
         if not volume_info:
             continue
@@ -91,9 +199,11 @@ def search_books(keyword, field, max_result, page):
         title = volume_info.get("title") or ""
         authors = volume_info.get("authors") or []
         authors = ', '.join(authors)
+        publisher = volume_info.get("publisher") or ""
         published_date = volume_info.get("publishedDate") or ""
-        all_book_isbns = volume_info.get("industryIdentifiers") or {}
+        book_page = volume_info.get("pageCount") or -1 # 결측치 임시 처리
 
+        all_book_isbns = volume_info.get("industryIdentifiers") or {}
         isbn_13 = ""
         for isbn_N in all_book_isbns: # ISBN 종류
             if isbn_N.get("type") == "ISBN_13":
@@ -119,63 +229,11 @@ def search_books(keyword, field, max_result, page):
             "title" : title,
             "isbn" : isbn_13,
             "author" : authors,
+            "publisher": publisher,
             "published_date" : published_date,
             "thumbnail" : thumbnail_url,
-            "category" : category
+            "category" : category,
+            "page" : book_page,
         })
+    return results
 
-    return {
-            "query": keyword,        # 사용자가 검색한 검색어
-            "field": field,          # 검색한 필드(title/author)
-            "page": page,            # 현재 페이지
-            "page_size": page_size,  # 현재 조회한 페이지에 들어있는 요소 개수
-            "results": results,       # 결과 목록
-            }
-
-def get_aladin_category_cid_by_isbn_13(isbn: str) -> Category:
-    """
-    도서 isbn 값을 이용해 알라딘 API 카테고리 cid를 가져오는 함수.
-    반환값: {"isbn_13": str, "cid": str}
-    """
-    category_others = Category.objects.get(pk=22)
-    if not isbn:
-        raise InvalidIsbn(dev_message="isbn 파라미터 부재")
-
-    params = {
-        "ttbkey": ALADIN_API_KEY,    
-        "itemIdType": "ISBN13",      
-        "ItemId": isbn,            
-        "output": "js",              
-        "Version": ALADIN_VERSION,
-        "OptResult": "itemPage",
-        
-    }
-
-    try:
-        res = session.get(ALADIN_ITEM_SEARCH_URL+'ItemLookUp.aspx', params=params, timeout=10)
-        res.raise_for_status()
-        data = res.json()
-    except requests.Timeout as e:
-        raise TimeoutError(dev_message="알라딘 API 응답 시간 초과", cause=e)
-    except requests.RequestException as e:
-        raise ExternalAPIError(dev_message="알라딘 API 호출 실패", cause=e) 
-    except ValueError as e:
-        raise ExternalAPIError(dev_message="알라딘 API 응답 -> JSON 변환 실패", cause=e)
-
-    items = data.get("item")
-
-    if not items: # isbn과 일치하는 도서 부재 시 빈 딕셔너리 반환
-        return category_others
-    item = items[0]
-
-    cid = item.get("categoryId")
-    if not cid:
-        return category_others
-    category_mapping = ExternalCategoryMapping.objects.filter(external_cid=cid)
-    if category_mapping:
-        category = category_mapping[0].category
-    else:
-        category = category_others
-    return category
-
-    
