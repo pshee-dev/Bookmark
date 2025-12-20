@@ -93,6 +93,7 @@ def search_books(keyword, field, max_result, page):
         authors = ', '.join(authors)
         published_date = volume_info.get("publishedDate") or ""
         all_book_isbns = volume_info.get("industryIdentifiers") or {}
+        book_page = volume_info.get("pageCount") or -1 # 결측치 임시 처리
 
         isbn_13 = ""
         for isbn_N in all_book_isbns: # ISBN 종류
@@ -121,13 +122,14 @@ def search_books(keyword, field, max_result, page):
             "author" : authors,
             "published_date" : published_date,
             "thumbnail" : thumbnail_url,
-            "category" : category
+            "category" : category,
+            "page" : book_page,
         })
 
     return {
             "keyword": keyword,        # 사용자가 검색한 검색어
             "field": field,          # 검색한 필드(title/author)
-            "page": page,            # 현재 페이지
+            "current_page": page,            # 현재 페이지
             "page_size": page_size,  # 현재 조회한 페이지에 들어있는 요소 개수
             "results": results,       # 결과 목록
             }
