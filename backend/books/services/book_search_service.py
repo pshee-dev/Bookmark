@@ -136,8 +136,9 @@ def search_books(keyword, field, max_result, page):
 
 def get_aladin_category_cid_by_isbn_13(isbn: str) -> Category:
     """
-    도서 isbn 값을 이용해 알라딘 API 카테고리 cid를 가져오는 함수.
-    반환값: {"isbn_13": str, "cid": str}
+    도서 isbn 값을 이용해 cid 값을 찾아낸 후, 자체 카테고리로 매핑한다.
+        - cid 값이 결측치이거나 자체 카테고리와 매핑되는 분류가 아닐 경우, pk 22(일본서적, 기타)인 Category로 매핑된다.
+    반환값: Category
     """
     category_others = Category.objects.get(pk=22)
     if not isbn:

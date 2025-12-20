@@ -32,6 +32,11 @@ def detail(request, book_id):
 
 @api_view(['POST'])
 def resolve_by_isbn(request):
+    """
+    검색된 책 리스트 중 하나를 선택 시, 해당 요소 isbn 정보로 db 내 존재여부를 확인한 후 \n
+    - a. db에 해당 도서 존재 시 -> 해당도서 상세정보 반환 \n
+    - b. db에 해당 도서 부재 시 -> 생성 후 해당도서 상세정보 반환 \n
+    """
     raw_isbn = request.data.get("isbn")
     isbn = raw_isbn.strip()
     if not isbn:
