@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  MypageView
+  UserView
 </template>
 
 <style scoped>
