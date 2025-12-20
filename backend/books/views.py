@@ -42,8 +42,8 @@ def detail(request, book_id):
 def resolve_by_isbn(request):
     """
     검색된 책 리스트 중 하나를 선택 시, 해당 요소 isbn 정보로 db 내 존재여부를 확인한 후 \n
-    - a. db에 해당 도서 존재 시 -> 해당도서 id 반환
-    - b. db에 해당 도서 부재 시 -> 생성 후 해당도서 id 반환 \n
+    - a. db에 해당 도서 존재 시 -> 해당도서 id와 함께 200 반환 \n
+    - b. db에 해당 도서 부재 시 -> 생성 후 해당도서 id와 함께 201 반환
     (프론트에서 해당 id를 참고하여 해당 도서 상세정보 url로 이동시키기 위한 정보 제공)
     """
     raw_isbn = request.data.get("isbn")
@@ -62,7 +62,7 @@ def resolve_by_isbn(request):
     
     # 책 정보가 db에 저장되어있지 않을 경우 새로 생성
     try:
-        book_info = get_book_info_by_isbn(isbn)
+        book_info = get_book_info_by_isbn(isbn, status=status.HTTP_200_OK)
     except BookExceptionHandler as e :
         return Response({
             "error": {
