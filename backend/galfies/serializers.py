@@ -3,7 +3,8 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from .models import Galfy
 from accounts.serializers import UserProfileSerializer
-from books.serializers import BookSummarySerializer
+from books.serializers import BookSerializer, BookSummarySerializer
+
 
 class GalfySerializer(serializers.ModelSerializer):
     book = BookSummarySerializer(read_only=True)

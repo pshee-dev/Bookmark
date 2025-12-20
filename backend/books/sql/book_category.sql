@@ -5,7 +5,7 @@ INSERT INTO books_category (id, name) VALUES (4, '고등학교참고서');
 INSERT INTO books_category (id, name) VALUES (5, '고전');
 INSERT INTO books_category (id, name) VALUES (6, '과학');
 INSERT INTO books_category (id, name) VALUES (7, '컴퓨터/모바일');
-INSERT INTO books_category (id, name) VALUES (8, '달력/기타');
+INSERT INTO books_category (id, name) VALUES (8, '달력');
 INSERT INTO books_category (id, name) VALUES (9, '대학교재/전문서적');
 INSERT INTO books_category (id, name) VALUES (10, '만화');
 INSERT INTO books_category (id, name) VALUES (11, '사회과학');

@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 
 from .models import Review
 from accounts.serializers import UserProfileSerializer
 from books.serializers import BookSummarySerializer
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     book = BookSummarySerializer(read_only=True)

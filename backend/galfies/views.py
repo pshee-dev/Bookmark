@@ -1,5 +1,3 @@
-from django.core.paginator import Paginator, EmptyPage
-from django.core.serializers import serialize
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -42,6 +40,7 @@ def list_and_create(request, book_id):
 
     # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
     sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
+    # TODO 페이지 사이즈 쿼리 추가
     # TODO likes 모델 생성한 후 인기도순 로직 점검
     ''' 
     if sort_field == 'popularity':

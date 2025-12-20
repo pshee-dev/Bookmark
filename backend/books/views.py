@@ -1,21 +1,29 @@
 from django.shortcuts import get_object_or_404
 from .models import Book
-from .serializers import BookSerializer
+from .serializers import BookSerializer, BookListSerializer
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
-from .services.book_search_service import search_books, fetch_aladin_info_by_isbn
+from .services.book_search_service import search_books, get_book_info_by_isbn
 from .errors import *
+
+STATUS_MAP = {
+    400: status.HTTP_400_BAD_REQUEST,
+    404: status.HTTP_404_NOT_FOUND,
+    500: status.HTTP_500_INTERNAL_SERVER_ERROR,
+    502: status.HTTP_502_BAD_GATEWAY,
+    504: status.HTTP_504_GATEWAY_TIMEOUT,
+}
 
 @api_view(['GET'])
 def search(request):
     keyword = (request.query_params.get("keyword") or "").strip()
-    field = (request.query_params.get("field") or "title").strip().lower()
-    page_size = request.query_params.get("page_size", '10')
-    page = request.query_params.get("page_size", '1')
+    field = (request.query_params.get("field") or "title").strip().lower() # title or author
+    page_size = request.query_params.get("page_size", '10') # 기본값 10, 최대값 40. 1미만/40초과 시 1/최대값으로 대체.
+    page = request.query_params.get("page", '1') # 기본값 1. 입력값이 1 미만일 시, 기본값으로 대체.
     try:
         search_results = search_books(keyword, field, page_size, page)
-        return Response(search_results, status=status.HTTP_200_OK)
+        return Response(BookListSerializer(search_results).data, status=status.HTTP_200_OK)
     except BookExceptionHandler as e:
         return Response({
             "error": {
@@ -30,8 +38,14 @@ def detail(request, book_id):
     serializer = BookSerializer(book)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['POST'])
+@api_view(['GET','POST'])
 def resolve_by_isbn(request):
+    """
+    검색된 책 리스트 중 하나를 선택 시, 해당 요소 isbn 정보로 db 내 존재여부를 확인한 후 \n
+    - a. db에 해당 도서 존재 시 -> 해당도서 id와 함께 200 반환 \n
+    - b. db에 해당 도서 부재 시 -> 생성 후 해당도서 id와 함께 201 반환
+    (프론트에서 해당 id를 참고하여 해당 도서 상세정보 url로 이동시키기 위한 정보 제공)
+    """
     raw_isbn = request.data.get("isbn")
     isbn = raw_isbn.strip()
     if not isbn:
@@ -42,13 +56,13 @@ def resolve_by_isbn(request):
             }
         }, status=STATUS_MAP[400])
     book = Book.objects.filter(isbn=isbn)
+    #TODO 동일 도서이지만 제목이 조금씩 달라, isbn이 다른 똑같은 책이 여러 권 생성되는 문제에 대해 고민해보기
     if book: 
-        serializer = BookSerializer(book.get())
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'book_id': book.get().id}, status=status.HTTP_200_OK)
     
     # 책 정보가 db에 저장되어있지 않을 경우 새로 생성
     try:
-        book_info = fetch_aladin_info_by_isbn(isbn) 
+        book_info = get_book_info_by_isbn(isbn, status=status.HTTP_200_OK)
     except BookExceptionHandler as e :
         return Response({
             "error": {
@@ -56,17 +70,8 @@ def resolve_by_isbn(request):
                 "message": e.user_message,
             }
         }, status=STATUS_MAP[e.http_status])
-        
     serializer = BookSerializer(data=book_info)
-    
     if serializer.is_valid(raise_exception=True):
-        serializer.save()
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+        book = serializer.save(category=book_info['category'])
+    return Response(book.pk, status=status.HTTP_201_CREATED)
 
-STATUS_MAP = {
-    400: status.HTTP_400_BAD_REQUEST, 
-    404: status.HTTP_404_NOT_FOUND,
-    500: status.HTTP_500_INTERNAL_SERVER_ERROR,
-    502: status.HTTP_502_BAD_GATEWAY,
-    504: status.HTTP_504_GATEWAY_TIMEOUT,
-}

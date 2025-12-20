@@ -1,4 +1,3 @@
-from rest_framework import pagination
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 # 기본값을 설정한 페이지네이션 클래스
