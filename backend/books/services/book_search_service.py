@@ -72,7 +72,7 @@ def search_books(keyword, field, max_result, page):
 
     if not json_parsed_data["items"]:
         return {
-            "query": "",        # 사용자가 검색한 검색어
+            "keyword": "",        # 사용자가 검색한 검색어
             "field": "",          # 검색한 필드(title/author)
             "page": 1,            # 현재 페이지
             "page_size": 0,  # 현재 조회한 페이지에 들어있는 요소 개수
@@ -125,7 +125,7 @@ def search_books(keyword, field, max_result, page):
         })
 
     return {
-            "query": keyword,        # 사용자가 검색한 검색어
+            "keyword": keyword,        # 사용자가 검색한 검색어
             "field": field,          # 검색한 필드(title/author)
             "page": page,            # 현재 페이지
             "page_size": page_size,  # 현재 조회한 페이지에 들어있는 요소 개수

@@ -3,10 +3,10 @@ from rest_framework.relations import PrimaryKeyRelatedField
 
 from .models import Review
 from accounts.serializers import UserProfileSerializer
-from books.serializers import BookSummarySerializer
+from books.serializers import BookSerializer
 
 class ReviewSerializer(serializers.ModelSerializer):
-    book = BookSummarySerializer(read_only=True)
+    book = BookSerializer(read_only=True)
     user = UserProfileSerializer(read_only=True)
     class Meta:
         model = Review
