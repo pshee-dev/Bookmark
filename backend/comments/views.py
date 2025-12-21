@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 from galfies.models import Galfy
 from galfies.serializers import GalfySerializer
@@ -54,6 +55,22 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
 
     return paginator.get_paginated_response(serializer.data)
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def delete(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if not is_author(request, comment):
+        return Response({
+            "error": {
+                "code": "invalid_user",
+                "message": "잘못된 접근입니다."
+            }
+        }, status=HTTP_403_FORBIDDEN)
+    comment.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
-def delete(request, target_id):
-    pass
+#TODO 추후 커스텀 퍼미션으로 정의하는 방식으로 리팩토링 가능(타 도메인 포함)
+def is_author(request, comment):
+    if comment.user != request.user:
+        return False
+    return True
