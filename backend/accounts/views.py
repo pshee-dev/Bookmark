@@ -80,7 +80,7 @@ def get_review_list(request, user_id):
     # 페이지네이션 정렬조건 설정
     page, paginator = apply_queryset_pagination(request, reviews, sort_field, sort_direction)
     serializer = ReviewSerializer(page, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return paginator.get_paginated_response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -96,7 +96,7 @@ def get_galfy_list(request, user_id):
     # 페이지네이션 정렬조건 설정
     page, paginator = apply_queryset_pagination(request, galfies, sort_field, sort_direction)
     serializer = GalfySerializer(page, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return paginator.get_paginated_response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -110,9 +110,9 @@ def get_feed(request, user_id):
     feed = list(chain(reviews, galfies, comments))
     feed.sort(key=lambda x: x.created_at, reverse=True)
 
-    page, paginator = apply_list_pagination(request, feed, "page")
-    results = {"feed": [find_serializer_feed_item(obj, request=request).data for obj in page]}
-    return Response(results, status=status.HTTP_200_OK)
+    serialized_feed = [find_serializer_feed_item(obj, request=request).data for obj in feed]
+    page, paginator = apply_list_pagination(request, serialized_feed, "page")
+    return paginator.get_paginated_response(page)
 
 
 def validate_query(sort_field, sort_direction):
