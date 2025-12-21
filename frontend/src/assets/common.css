@@ -102,3 +102,43 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 .btn-submit:hover {
   background-color: #456AFF;
 }
+
+
+/* ===== modal ===== */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  width: 500px;
+  padding: 40px 30px 50px;
+  background: #fff;
+  border-radius: 20px 60px 20px 60px;
+  text-align: left;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+.modal-header .title {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.modal .btn-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}

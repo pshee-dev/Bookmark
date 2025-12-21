@@ -8,10 +8,10 @@ export const useAccountStore = defineStore('account', () => {
 
   const API_URL = import.meta.env.VITE_API_URL
   const token = ref(null)
-  const signupErrors = ref({})
-
   const user = ref(null) // 로그인 시 유저 정보 캐싱
-
+  
+  const signupErrors = ref({})
+  
 
   // 회원가입
   const signup = function (formData) {
@@ -107,7 +107,7 @@ export const useAccountStore = defineStore('account', () => {
   {
     key: 'user-local',
     storage: localStorage,
-    pick: ['user.username', 'token']
+    pick: ['user', 'token']
   }, 
   {
     key: 'user-session',
