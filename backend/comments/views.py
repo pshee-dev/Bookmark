@@ -7,7 +7,7 @@ from rest_framework.status import HTTP_403_FORBIDDEN
 from galfies.models import Galfy
 from reviews.models import Review
 from common.utils import paginations
-from .errors import InvalidTargetType, InvalidQuery
+from .errors import InvalidTargetType, InvalidQuery, NotFoundError
 from .models import TargetType, Comment
 from .serializers import CommentSerializer, CommentCreateSerializer
 from rest_framework.response import Response
@@ -16,39 +16,41 @@ from rest_framework.response import Response
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def list_and_create(request, target_type, review_id=None, galfy_id=None):
-
     if target_type == TargetType.REVIEW.value:
         model = Review
-        target_id = review_id
-        target_type = TargetType.REVIEW
+        target = get_object_or_404(model, id=review_id)
+        save_kwargs = {
+            "user": request.user,
+            "target_type": TargetType.REVIEW,
+            "review": target,
+        }
     elif target_type == TargetType.GALFY.value:
         model = Galfy
-        target_id = galfy_id
-        target_type = TargetType.GALFY.value
+        target = get_object_or_404(model, id=galfy_id)
+        save_kwargs = {
+            "user": request.user,
+            "target_type": TargetType.GALFY,
+            "galfy": target,
+        }
     else:
         raise InvalidTargetType(
             dev_message="댓글이 달린 게시글 타입이 유효하지 않습니다."
         )
-
-    # 타겟이 실제로 존재하는 게시글인지 확인
-        # - 시리얼라이저에 객체가 아닌 id를 넘기게되므로 시리얼라이저에서 검증에서 걸리지 않기 때문.
-        #TODO 리뷰, 갈피 게시글 삭제 시 댓글 삭제도 연동되게끔 하는 로직 추가
-    target = get_object_or_404(model, id=target_id)
-
     if request.method == 'POST':
         serializer = CommentCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        created_comment = serializer.save(
-            user=request.user,
-            target_type=target_type,
-            target_id=target_id,
-        )
-
-        return Response(CommentSerializer(created_comment).data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid(raise_exception=True):
+            created_Comment = serializer.save(**save_kwargs)
+            return Response(CommentSerializer(created_Comment).data, status=status.HTTP_201_CREATED)
 
     # GET일 경우 댓글 리스트 반환
-    comments = Comment.objects.filter(target_id=target_id).filter(target_type=target_type)
+    if target_type == TargetType.REVIEW.value:
+        comments = Comment.objects.filter(review_id=review_id).filter(target_type=target_type)
+    elif target_type == TargetType.GALFY.value:
+        comments = Comment.objects.filter(galfy_id=galfy_id).filter(target_type=target_type)
+    else:
+        raise NotFoundError(
+            dev_message="타겟 게시물을 찾을 수 없습니다."
+        )
     sort_direction = request.query_params.get('sort-direction', 'desc')
     sort_field = request.query_params.get('sort-field', 'created_at')
     if sort_field not in ('created_at',): # 확장성을 위해 ==가 아닌 in 조건 사용
@@ -57,7 +59,7 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
         raise InvalidQuery(dev_message="옳지 않은 sort_direction 쿼리 파라미터가 전달되었습니다.")
 
     # 페이지네이션 정렬조건 설정
-    page, paginator = paginations.apply_pagination(request, comments, sort_field, sort_direction)
+    page, paginator = paginations.apply_queryset_pagination(request, comments, sort_field, sort_direction)
     serializer = CommentSerializer(page, many=True)
 
     return paginator.get_paginated_response(serializer.data)

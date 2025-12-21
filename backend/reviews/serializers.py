@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Review
-from accounts.serializers import UserProfileSerializer
+from accounts.accounts_serializers.serializers import UserProfileSerializer
 from books.serializers import BookSummarySerializer
 
 

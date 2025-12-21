@@ -1,6 +1,11 @@
 from django.db import models
 from django.conf import settings
 
+from galfies.models import Galfy
+from reviews.models import Review
+from .errors import ValidationError
+
+
 class TargetType(models.TextChoices):
     REVIEW = 'REVIEW', '리뷰 댓글'
     GALFY = 'GALFY', '갈피 댓글'
@@ -10,13 +15,33 @@ class Comment(models.Model):
         max_length=20,
         choices=TargetType.choices,
     )
-    target_id = models.IntegerField()
     content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE,
                              related_name='comments',
                              )
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        blank=True,
+        null=True,
+    )
+    galfy = models.ForeignKey(
+        Galfy,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        blank=True,
+        null=True,
+    )
+    def clean(self):
+        if self.target_type == TargetType.REVIEW:
+            if not self.review or self.galfy:
+                raise ValidationError(dev_message = "리뷰 댓글은 review만 설정해야 합니다.")
+        elif self.target_type == TargetType.GALFY:
+            if not self.galfy or self.review:
+                raise ValidationError(dev_message="갈피 댓글은 galfy만 설정해야 합니다.")
 
     def __str__(self):
         return '\n'.join([

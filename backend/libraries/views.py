@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
 from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
-from common.utils.paginations import apply_pagination
+from common.utils.paginations import apply_queryset_pagination
 
 
 @api_view(['GET', 'POST'])
@@ -40,7 +40,7 @@ def library_book_list(request):
         sort_direction = request.query_params.get('sort-direction', 'asc')
         
         # pagination 적용
-        page, paginator = apply_pagination(request, libraries, sort_field, sort_direction, 'limit')   
+        page, paginator = apply_queryset_pagination(request, libraries, sort_field, sort_direction, 'limit')
         serializer = LibraryBookListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
