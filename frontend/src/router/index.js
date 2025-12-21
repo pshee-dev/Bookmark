@@ -103,7 +103,7 @@ const router = createRouter({
       path: '/bookmark/:username',
       component: () => import('@/views/UserView.vue'),
       children: [
-        { path: '', name: 'book', component: () => import('@/components/UserGalfyList.vue') },
+        { path: '', name: 'user', component: () => import('@/components/UserGalfyList.vue') },
         { path: '/galfy', name: 'userGalfyList', component: () => import('@/components/UserGalfyList.vue') },
         { path: '/review', name: 'userReviewList', component: () => import('@/components/UserReviewList.vue') },
       ],

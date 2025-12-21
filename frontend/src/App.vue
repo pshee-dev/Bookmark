@@ -5,8 +5,15 @@
 
 <template>
   <LayoutHeader />
-  <RouterView />
+  <main>
+    <RouterView />
+  </main>
   <LayoutFooter />
 </template>
 
-<style scoped></style>
+<style scoped>
+  main {
+    margin-top: 100px;
+    min-height: 100vh; /* test */
+  }
+</style>
