@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -21,16 +20,21 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
     if target_type == TargetType.REVIEW.value:
         model = Review
         target_id = review_id
+        target_type = TargetType.REVIEW
     elif target_type == TargetType.GALFY.value:
         model = Galfy
         target_id = galfy_id
+        target_type = TargetType.GALFY.value
     else:
         raise InvalidTargetType(
             dev_message="댓글이 달린 게시글 타입이 유효하지 않습니다."
         )
 
+    # 타겟이 실제로 존재하는 게시글인지 확인
+        # - 시리얼라이저에 객체가 아닌 id를 넘기게되므로 시리얼라이저에서 검증에서 걸리지 않기 때문.
+        #TODO 리뷰, 갈피 게시글 삭제 시 댓글 삭제도 연동되게끔 하는 로직 추가
     target = get_object_or_404(model, id=target_id)
-    target_type=ContentType.objects.get_for_model(target)
+
     if request.method == 'POST':
         serializer = CommentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
