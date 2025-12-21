@@ -1,13 +1,19 @@
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from itertools import chain
+
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
 
-from common.utils import paginations
+from common.utils.paginations import apply_list_pagination, apply_queryset_pagination
+from galfies.models import Galfy
 from galfies.serializers import GalfySerializer
+from reviews.models import Review
+from comments.models import Comment
 from reviews.serializers import ReviewSerializer
-from .serializers import UserProfileSerializer, FollowListSerializer
+from .accounts_serializers.serializers import UserProfileSerializer, FollowListSerializer
+from .accounts_serializers.feed_serializers import find_serializer_feed_item
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from .errors import InvalidQuery
@@ -72,7 +78,7 @@ def get_review_list(request, user_id):
     validate_query(sort_field, sort_direction) # 유효하지 않은 정렬조건 쿼리의 경우, 에러 발생
 
     # 페이지네이션 정렬조건 설정
-    page, paginator = paginations.apply_pagination(request, reviews, sort_field, sort_direction)
+    page, paginator = apply_queryset_pagination(request, reviews, sort_field, sort_direction)
     serializer = ReviewSerializer(page, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -88,14 +94,25 @@ def get_galfy_list(request, user_id):
     validate_query(sort_field, sort_direction) # 유효하지 않은 정렬조건 쿼리의 경우, 에러 발생
 
     # 페이지네이션 정렬조건 설정
-    page, paginator = paginations.apply_pagination(request, galfies, sort_field, sort_direction)
+    page, paginator = apply_queryset_pagination(request, galfies, sort_field, sort_direction)
     serializer = GalfySerializer(page, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_feed(request, user_id):
-    pass
+    member = get_object_or_404(User, id=user_id)
+
+    reviews = Review.objects.filter(user=member)
+    galfies = Galfy.objects.filter(user=member)
+    comments = Comment.objects.filter(user=member)
+
+    feed = list(chain(reviews, galfies, comments))
+    feed.sort(key=lambda x: x.created_at, reverse=True)
+
+    page, paginator = apply_list_pagination(request, feed, "page")
+    results = {"feed": [find_serializer_feed_item(obj, request=request).data for obj in page]}
+    return Response(results, status=status.HTTP_200_OK)
 
 
 def validate_query(sort_field, sort_direction):
@@ -103,3 +120,6 @@ def validate_query(sort_field, sort_direction):
         raise InvalidQuery(dev_message="옳지 않은 sort_field 쿼리 파라미터가 전달되었습니다.")
     if sort_direction not in ('desc', 'asc'):
         raise InvalidQuery(dev_message="옳지 않은 sort_direction 쿼리 파라미터가 전달되었습니다.")
+
+
+

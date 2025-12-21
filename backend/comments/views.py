@@ -59,7 +59,7 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
         raise InvalidQuery(dev_message="옳지 않은 sort_direction 쿼리 파라미터가 전달되었습니다.")
 
     # 페이지네이션 정렬조건 설정
-    page, paginator = paginations.apply_pagination(request, comments, sort_field, sort_direction)
+    page, paginator = paginations.apply_queryset_pagination(request, comments, sort_field, sort_direction)
     serializer = CommentSerializer(page, many=True)
 
     return paginator.get_paginated_response(serializer.data)

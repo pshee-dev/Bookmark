@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from accounts.serializers import UserProfileSerializer
+from accounts.accounts_serializers.serializers import UserProfileSerializer
 from galfies.serializers import GalfySerializer
 from reviews.serializers import ReviewSerializer
 from .models import Comment, TargetType

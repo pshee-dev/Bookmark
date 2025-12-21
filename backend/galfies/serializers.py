@@ -1,9 +1,8 @@
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 
 from .models import Galfy
-from accounts.serializers import UserProfileSerializer
-from books.serializers import BookSerializer, BookSummarySerializer
+from accounts.accounts_serializers.serializers import UserProfileSerializer
+from books.serializers import BookSummarySerializer
 
 
 class GalfySerializer(serializers.ModelSerializer):
