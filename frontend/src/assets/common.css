@@ -1,5 +1,11 @@
 * {
   box-sizing: border-box;
+}
+
+html, body, div, span,
+h1, h2, h3, h4, h5, h6, p, a, em, small, strong, b, u, i, 
+dl, dt, dd, ol, ul, li, fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
   font-family: 'IBM Plex Sans KR', sans-serif;
 }
 
