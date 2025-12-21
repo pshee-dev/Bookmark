@@ -3,6 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
+
+from galfies.serializers import GalfySerializer
+from reviews.serializers import ReviewSerializer
 from .serializers import UserProfileSerializer, FollowListSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Count
@@ -57,12 +60,18 @@ def get_follower_list(request, user_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_review_list(request, user_id):
-    pass
+    member = get_object_or_404(User, id=user_id)
+    reviews = member.reviews.all()
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_galfy_list(request, user_id):
-    pass
+    member = get_object_or_404(User, id=user_id)
+    galfies = member.galfies.all()
+    serializer = GalfySerializer(galfies, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
