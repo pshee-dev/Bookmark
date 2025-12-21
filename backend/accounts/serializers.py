@@ -30,8 +30,8 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta:        
         model = User
-        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'profile_img')
-        read_only_fields = ('username',)
+        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'profile_img', 'full_name')
+        read_only_fields = ('username', 'full_name')
 
 
 # [Profile] 유저 프로필 페이지 조회 - GET
