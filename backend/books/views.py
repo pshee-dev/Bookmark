@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
+
 from .models import Book
 from .serializers import BookSerializer, BookListSerializer
 from rest_framework.decorators import api_view
@@ -15,6 +17,25 @@ STATUS_MAP = {
     504: status.HTTP_504_GATEWAY_TIMEOUT,
 }
 
+@extend_schema(
+    tags=["Books"],
+    summary="도서 검색",
+    description="""
+    키워드 기반으로 도서를 검색합니다.
+
+    - 제목(title) 또는 저자(author) 기준 검색 가능
+    - 외부 도서 API를 통해 검색된 결과를 페이지네이션 형태로 반환합니다.
+
+    ### 동작 방식
+    1. keyword, field, page_size, page 값을 쿼리 파라미터로 받습니다.
+    2. 내부에서 외부 도서 API를 호출합니다.
+    3. 검색 결과를 리스트 형태로 반환합니다.
+
+    ### 예외 처리
+    - 외부 API 오류
+    - 잘못된 검색 조건
+    """,
+)
 @api_view(['GET'])
 def search(request):
     keyword = (request.query_params.get("keyword") or "").strip()
@@ -32,12 +53,41 @@ def search(request):
             }
         }, status=STATUS_MAP[e.http_status])
 
+@extend_schema(
+    tags=["Books"],
+    summary="도서 상세 조회",
+    description="""
+    특정 도서의 상세 정보를 조회합니다.
+
+    - 내부 DB에 저장된 도서만 조회 가능
+    - 존재하지 않는 경우 404 반환
+    """,
+)
 @api_view(['GET'])
 def detail(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     serializer = BookSerializer(book)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@extend_schema(
+    tags=["Books"],
+    summary="ISBN 기반 도서 조회 또는 생성",
+    description="""
+    ISBN을 기준으로 도서의 DB 존재 여부를 확인합니다.
+
+    ### 동작 시나리오
+    1. 요청으로 전달된 ISBN을 기준으로 DB 조회
+    2. 이미 존재하는 경우
+       → 해당 도서의 ID를 반환 (200 OK)
+    3. 존재하지 않는 경우
+       → 외부 API를 통해 도서 정보 조회
+       → DB에 신규 생성 후 ID 반환 (201 Created)
+
+    ### 사용 목적
+    - 검색 결과에서 특정 도서를 선택했을 때
+    - 프론트엔드에서 도서 상세 페이지로 이동하기 위한 ID 확보
+    """,
+)
 @api_view(['GET','POST'])
 def resolve_by_isbn(request):
     """
