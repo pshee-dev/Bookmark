@@ -103,4 +103,15 @@ export const useAccountStore = defineStore('account', () => {
     signupErrors,
     user,
   }
-})
+}, {persist: [
+  {
+    key: 'user-local',
+    storage: localStorage,
+    pick: ['user.username', 'token']
+  }, 
+  {
+    key: 'user-session',
+    storage: sessionStorage,
+    pick: []
+  }
+]})
