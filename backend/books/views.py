@@ -112,7 +112,7 @@ def resolve_by_isbn(request):
     
     # 책 정보가 db에 저장되어있지 않을 경우 새로 생성
     try:
-        book_info = get_book_info_by_isbn(isbn, status=status.HTTP_200_OK)
+        book_info = get_book_info_by_isbn(isbn)
     except BookExceptionHandler as e :
         return Response({
             "error": {
@@ -123,5 +123,5 @@ def resolve_by_isbn(request):
     serializer = BookSerializer(data=book_info)
     if serializer.is_valid(raise_exception=True):
         book = serializer.save(category=book_info['category'])
-    return Response(book.pk, status=status.HTTP_201_CREATED)
+    return Response({'book_id': book.id}, status=status.HTTP_201_CREATED)
 

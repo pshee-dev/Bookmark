@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import HTTP_403_FORBIDDEN
 from books.models import Book
-from common.utils.paginations import apply_pagination
+from common.utils.paginations import apply_queryset_pagination
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 
@@ -49,7 +49,7 @@ def list_and_create(request, book_id):
         ) 
     '''
 
-    page, paginator = apply_pagination(request, queryset, sort_field, sort_direction)
+    page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
     serializer = ReviewSerializer(page, many=True)
 
     return paginator.get_paginated_response(serializer.data)

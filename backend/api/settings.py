@@ -169,9 +169,9 @@ ACCOUNT_EMAIL_VERIFICATION = 'none' # dj-rest-auth 이메일 인증 비활성화
 
 # dj-rest-auth 커스텀한 시리얼라이저 등록
 REST_AUTH = {
-    'LOGIN_SERIALIZER': 'accounts.serializers.CustomLoginSerializer',
-    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
-    'REGISTER_SERIALIZER': 'accounts.serializers.CustomSignupSerializer',
+    'LOGIN_SERIALIZER': 'accounts.accounts_serializers.serializers.CustomLoginSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.accounts_serializers.serializers.CustomUserDetailsSerializer',
+    'REGISTER_SERIALIZER': 'accounts.accounts_serializers.serializers.CustomSignupSerializer',
 }
 
 
