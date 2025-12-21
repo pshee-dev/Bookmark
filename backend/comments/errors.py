@@ -24,3 +24,7 @@ class NotFoundError(CommentExceptionHandler):
 class InvalidQuery(CommentExceptionHandler):
     code = "invalid_query"
     http_status = 400
+
+class ValidationError(CommentExceptionHandler):
+    code = "validation_error"
+    http_status = 400
