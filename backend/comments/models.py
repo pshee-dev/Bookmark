@@ -11,7 +11,7 @@ class Comment(models.Model):
         choices=TargetType.choices,
     )
     target_id = models.IntegerField()
-    content = models.TextField(max_length=255)
+    content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE,
