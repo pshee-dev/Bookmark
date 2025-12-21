@@ -5,10 +5,10 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.status import HTTP_403_FORBIDDEN
 
 from galfies.models import Galfy
-from galfies.serializers import GalfySerializer
+from common.utils import safe_convert
 from reviews.models import Review
 from common.utils import paginations
-from .errors import InvalidTargetType
+from .errors import InvalidTargetType, InvalidQuery
 from .models import TargetType, Comment
 from .serializers import CommentSerializer, CommentCreateSerializer
 from rest_framework.response import Response
@@ -48,9 +48,15 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
 
     # GET일 경우 댓글 리스트 반환
     comments = Comment.objects.filter(target_id=target_id)
+    sort_direction = request.query_params.get('sort-direction', 'desc')
+    sort_field = request.query_params.get('sort-field', 'created_at')
+    if sort_field not in ('created_at'): # 확장성을 위해 ==가 아닌 in 조건 사용
+        raise InvalidQuery(dev_message="옳지 않은 sort_field 쿼리 파라미터가 전달되었습니다.")
+    if sort_direction not in ('desc', 'asc'):
+        raise InvalidQuery(dev_message="옳지 않은 sort_direction 쿼리 파라미터가 전달되었습니다.")
 
     # 페이지네이션 정렬조건 설정
-    page, paginator = paginations.apply_pagination(request, comments, 'created_at')
+    page, paginator = paginations.apply_pagination(request, comments, sort_field, sort_direction)
     serializer = CommentSerializer(page, many=True)
 
     return paginator.get_paginated_response(serializer.data)

@@ -37,7 +37,7 @@ def list_and_create(request, book_id):
         'popularity': 'popularity',
         'created_at': 'created_at',
     }
-
+    #TODO 코멘트처럼 파라미터 예외처리 추가
     # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
     sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
     # TODO 페이지 사이즈 쿼리 추가

@@ -20,3 +20,7 @@ class InvalidTargetType(CommentExceptionHandler):
 class NotFoundError(CommentExceptionHandler):
     code = "target_not_found"
     http_status = 404
+
+class InvalidQuery(CommentExceptionHandler):
+    code = "invalid_query"
+    http_status = 400
