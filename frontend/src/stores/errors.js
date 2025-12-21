@@ -19,7 +19,7 @@ export const useErrorStore = defineStore('error', () => {
   const closeErrorModal = () => {
     if (errorStatus.value === 'requiresAuth') {
       router.push({name: 'login'})
-    } else {
+    } else if (errorStatus.value === 'ownerOnly' || errorStatus.value === 'guestOnly') {
       window.history.back()
     }
     isErrorModalOpen.value = false

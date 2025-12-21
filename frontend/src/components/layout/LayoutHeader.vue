@@ -1,26 +1,41 @@
 <script setup>
   import { computed, ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import { useAccountStore } from '@/stores/accounts'
+  import { useBookStore } from '@/stores/books'
   import { storeToRefs } from 'pinia'
+
+  const router = useRouter()
 
   const accountStore =  useAccountStore()
   const { isLogin, user } = storeToRefs(accountStore)
 
-  // 검색
-  const searchKeyword = ref(null)
-  const search = () => {
-    
+  const bookStore = useBookStore()
+  const { searchType, searchKeyword } = storeToRefs(bookStore)
+
+  // 전체 검색 옵션
+  const searchOptions = [
+    { value: 'title', label: '제목 검색'},
+    { value: 'author', label: '작가 검색'},
+  ]
+
+  // 검색 옵션 열림 여부
+  const isSelectOpen = ref(false) 
+  
+  // 검색 옵션 선택
+  const selectType = (option) => {
+    searchType.value = option.value
+    isSelectOpen.value = false
   }
 
-  // 검색타입
-  const searchType = ref('title')
-  const isSelectOpen = ref(false)
-  const selectLabel = computed(() => {
-    return searchType.value === 'title' ? '제목 검색' : '작가 검색'
+  // 선택된 옵션 라벨
+  const selectedLabel = computed(() => {
+    return searchOptions.find(option => option.value === searchType.value).label
   })
-  const selectType = (type) => {
-    searchType.value = type
-    isSelectOpen.value = false
+  
+  // 검색
+  const search = () => {
+    bookStore.search()
   }
 </script>
 
@@ -34,7 +49,7 @@
       <form class="form-search" @submit.prevent="search">
 
         <div class="select-box" @click="isSelectOpen = !isSelectOpen">
-          <span>{{ selectLabel }}</span>
+          <span>{{ selectedLabel }}</span>
           <img
             src="@/assets/images/common/icon_arrow_down.png"
             alt="화살표"
@@ -43,8 +58,13 @@
           />
 
           <ul v-if="isSelectOpen" class="select-list">
-            <li @click.stop="selectType('title')">제목 검색</li>
-            <li @click.stop="selectType('author')">작가 검색</li>
+            <li 
+              v-for="option in searchOptions"
+              :key="option.value"
+              @click.stop="selectType(option)"
+            >
+              {{ option.label }}
+            </li>
           </ul>
         </div>
 
