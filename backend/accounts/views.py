@@ -4,11 +4,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
 
+from common.utils import paginations
 from galfies.serializers import GalfySerializer
 from reviews.serializers import ReviewSerializer
 from .serializers import UserProfileSerializer, FollowListSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Count
+from .errors import InvalidQuery
 
 User = get_user_model()
 
@@ -57,12 +59,21 @@ def get_follower_list(request, user_id):
     serializer = FollowListSerializer(followers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+#TODO 추후 리뷰, 갈피, 피드 코드 중복 제거 리팩토링 필요
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_review_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     reviews = member.reviews.all()
-    serializer = ReviewSerializer(reviews, many=True)
+
+    sort_direction = request.query_params.get('sort-direction', 'desc')
+    sort_field = request.query_params.get('sort-field', 'created_at')
+
+    validate_query(sort_field, sort_direction) # 유효하지 않은 정렬조건 쿼리의 경우, 에러 발생
+
+    # 페이지네이션 정렬조건 설정
+    page, paginator = paginations.apply_pagination(request, reviews, sort_field, sort_direction)
+    serializer = ReviewSerializer(page, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -70,10 +81,25 @@ def get_review_list(request, user_id):
 def get_galfy_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     galfies = member.galfies.all()
-    serializer = GalfySerializer(galfies, many=True)
+
+    sort_direction = request.query_params.get('sort-direction', 'desc')
+    sort_field = request.query_params.get('sort-field', 'created_at')
+
+    validate_query(sort_field, sort_direction) # 유효하지 않은 정렬조건 쿼리의 경우, 에러 발생
+
+    # 페이지네이션 정렬조건 설정
+    page, paginator = paginations.apply_pagination(request, galfies, sort_field, sort_direction)
+    serializer = GalfySerializer(page, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_feed(request, user_id):
     pass
+
+
+def validate_query(sort_field, sort_direction):
+    if sort_field not in ('created_at',): # 확장성을 위해 ==가 아닌 in 조건 사용
+        raise InvalidQuery(dev_message="옳지 않은 sort_field 쿼리 파라미터가 전달되었습니다.")
+    if sort_direction not in ('desc', 'asc'):
+        raise InvalidQuery(dev_message="옳지 않은 sort_direction 쿼리 파라미터가 전달되었습니다.")
