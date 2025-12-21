@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.status import HTTP_403_FORBIDDEN
 
 from galfies.models import Galfy
-from common.utils import safe_convert
 from reviews.models import Review
 from common.utils import paginations
 from .errors import InvalidTargetType, InvalidQuery
@@ -21,9 +20,11 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
     if target_type == TargetType.REVIEW.value:
         model = Review
         target_id = review_id
+        target_type = TargetType.REVIEW
     elif target_type == TargetType.GALFY.value:
         model = Galfy
         target_id = galfy_id
+        target_type = TargetType.GALFY.value
     else:
         raise InvalidTargetType(
             dev_message="댓글이 달린 게시글 타입이 유효하지 않습니다."
@@ -47,10 +48,10 @@ def list_and_create(request, target_type, review_id=None, galfy_id=None):
         return Response(CommentSerializer(created_comment).data, status=status.HTTP_201_CREATED)
 
     # GET일 경우 댓글 리스트 반환
-    comments = Comment.objects.filter(target_id=target_id)
+    comments = Comment.objects.filter(target_id=target_id).filter(target_type=target_type)
     sort_direction = request.query_params.get('sort-direction', 'desc')
     sort_field = request.query_params.get('sort-field', 'created_at')
-    if sort_field not in ('created_at'): # 확장성을 위해 ==가 아닌 in 조건 사용
+    if sort_field not in ('created_at',): # 확장성을 위해 ==가 아닌 in 조건 사용
         raise InvalidQuery(dev_message="옳지 않은 sort_field 쿼리 파라미터가 전달되었습니다.")
     if sort_direction not in ('desc', 'asc'):
         raise InvalidQuery(dev_message="옳지 않은 sort_direction 쿼리 파라미터가 전달되었습니다.")
