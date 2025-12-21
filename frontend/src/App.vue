@@ -14,6 +14,6 @@
 <style scoped>
   main {
     margin-top: 100px;
-    min-height: 100vh; /* test */
+    /* min-height: 100vh; */
   }
 </style>

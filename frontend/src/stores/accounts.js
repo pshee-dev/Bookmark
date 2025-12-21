@@ -5,46 +5,72 @@ import axios from 'axios'
 
 export const useAccountStore = defineStore('account', () => {
   const router = useRouter()
-  
-  const API_URL = 'http://127.0.0.1:8000'
-  const token = ref(null)
 
-  const username = ref('user')
+  const API_URL = import.meta.env.VITE_API_URL
+  const token = ref(null)
+  const signupErrors = ref({})
+
+  const user = ref(null) // 로그인 시 유저 정보 캐싱
+
 
   // 회원가입
-  const signUp = function (payload) {
-    const { username, password1, password2 } = payload
-
+  const signup = function (formData) {
+    signupErrors.value = {} // 이전 에러 초기화
     axios({
       method: 'post',
       url: `${API_URL}/accounts/signup/`,
-      data: {
-        username, password1, password2,
-      }
+      data: formData,
     })
       .then(res => {
         console.log('회원 가입이 완료되었습니다.')
-        const password = password1
-        logIn({ username, password })
+        
+        // 회원가입 후 자동 로그인
+        const username = formData.get('username')
+        const password = formData.get('password1')
+        login({ username, password })
       })
-      .catch(err => console.log(err))
+      .catch(err => {
+        if (err.response && err.response.status === 400) {
+          signupErrors.value = err.response.data
+        } else {
+          console.error(err)
+        }
+      })
   }
 
 
   // 로그인
-  const logIn = function (payload) {
-    const { username, password } = payload
+  const login = function ({ username, password }) {
     axios({
       method: 'post',
       url: `${API_URL}/accounts/login/`,
       data: {
-        username, password
+        username, 
+        password,
       }
     })
       .then(res => {
         console.log('로그인이 완료되었습니다.')
         token.value = res.data.key
+        userInfo(token.value)
         router.push({ name: 'main' })
+      })
+      .catch(err => console.log(err))
+  }
+
+  // 유저 정보 캐싱
+  const userInfo = function(token) {
+    axios({
+      method: 'get',
+      url: `${API_URL}/accounts/user/`,
+      headers: {Authorization: `Token ${token}`}
+    })
+      .then(res => {
+        console.log(res.data)
+        user.value = {
+          username: res.data.username,
+          name: res.data.full_name,
+        }
       })
       .catch(err => console.log(err))
   }
@@ -55,24 +81,26 @@ export const useAccountStore = defineStore('account', () => {
   })
 
   // 로그아웃
-  const logOut = function () {
+  const logout = function () {
     axios({
       method: 'post',
       url: `${API_URL}/accounts/logout/`
     })
       .then(res => {
         token.value = null
+        user.value = null
         router.push({ name: 'login' })
       })
       .catch(err => console.log(err))
   }
 
   return {
-    signUp,
-    logIn,
+    signup,
+    login,
     token,
     isLogin,
-    logOut,
-    username,
+    logout,
+    signupErrors,
+    user,
   }
 })

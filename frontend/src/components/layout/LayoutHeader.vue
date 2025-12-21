@@ -4,7 +4,7 @@
   import { storeToRefs } from 'pinia'
 
   const accountStore =  useAccountStore()
-  const { isLogin, username } = storeToRefs(accountStore)
+  const { isLogin, user } = storeToRefs(accountStore)
 
   // 검색
   const searchKeyword = ref(null)
@@ -61,12 +61,12 @@
       </form>
 
       <!-- 메뉴 -->
-      <div v-show="isLogin" class="menu-list">
-        <RouterLink :to="{name: 'libraries', params: {username: username}}">서재</RouterLink>
+      <div v-if="isLogin && user" class="menu-list">
+        <RouterLink :to="{name: 'libraries', params: {username: user.username}}">서재</RouterLink>
         <RouterLink :to="{name: 'feed'}">피드</RouterLink>
-        <RouterLink :to="{name: 'user', params: {username: username}}">마이페이지</RouterLink>
+        <RouterLink :to="{name: 'user', params: {username: user.username}}">마이페이지</RouterLink>
       </div>
-      <div v-show="!isLogin" class="menu-list">
+      <div v-if="!isLogin" class="menu-list">
         <RouterLink :to="{name: 'login'}">로그인</RouterLink>
         <RouterLink :to="{name: 'signup'}">회원가입</RouterLink>
       </div>
