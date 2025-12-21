@@ -15,8 +15,8 @@ class DefaultLimitOffsetPagination(LimitOffsetPagination):
     offset_query_param = 'offset'
 
 
-# 페이지네이션 적용
-def apply_pagination(request, queryset, sort_field, sort_direction='desc', type='page'):
+# 쿼리셋 페이지네이션 적용
+def apply_queryset_pagination(request, queryset, sort_field, sort_direction='desc', type='page'):
     """
     페이지네이션을 적용하여 페이지 단위로 슬라이싱된 쿼리셋(page)과 페이지네이터를 반환합니다.
         - 반환된 페이지네이터를 이용하여 paginator.get_paginated_response(serializer.data)로 response 객체를 만들 수 있습니다.
@@ -43,4 +43,24 @@ def apply_pagination(request, queryset, sort_field, sort_direction='desc', type=
     page = paginator.paginate_queryset(queryset, request)
     return page, paginator
 
+# 리스트 페이지네이션 적용
+def apply_list_pagination(request, ls, type='page'):
+    """
+    페이지네이션을 적용하여 페이지 단위로 슬라이싱된 쿼리셋(page)과 페이지네이터를 반환합니다.
+        - 정렬을 제공하지 않습니다. (쿼리셋이 아니기 때문)
+        - 반환된 페이지네이터를 이용하여 paginator.get_paginated_response(serializer.data)로 response 객체를 만들 수 있습니다.
 
+    :param request: 요청 객체 | request 객체
+    :param ls: 페이지네이션 적용할 리스트 | queryset 객체
+    :param type: 사용할 페이지네이션 종류 page(기본값) / limit | str 타입
+    :return: (page, paginator)
+    """
+
+    # 사용할 페이지네이션 종류 선택 (기본값: page)
+    if type == 'page':
+        paginator = DefaultPageNumberPagination()
+    elif type == 'limit':
+        paginator = DefaultLimitOffsetPagination()
+
+    page = paginator.paginate_queryset(ls, request)
+    return page, paginator
