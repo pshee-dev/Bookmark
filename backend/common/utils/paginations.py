@@ -25,6 +25,7 @@ def apply_pagination(request, queryset, sort_field, sort_direction='desc', type=
     :param queryset: 정렬할 쿼리셋 | queryset 객체
     :param sort_field: 정렬 기준 필드 | str 타입
     :param sort_direction: 정렬방향 desc(기본값) / asc | str 타입
+    :param type: 사용할 페이지네이션 종류 page(기본값) / limit | str 타입
     :return: (page, paginator)
     """
 
