@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from unicodedata import category
 
 from .models import Book, Category
 
@@ -17,6 +16,17 @@ class BookSerializer(serializers.ModelSerializer):
             "id", "title", "author", "thumbnail", "category", "publisher", "published_date", "page", "isbn",
         ]
         read_only_fields = ["id"]
+
+class ISBNResolveSerializer(serializers.Serializer):
+    """
+    ISBN Resolve API 요청 바디용 Serializer
+    (Swagger 문서화 전용)
+    """
+    isbn = serializers.CharField(
+        help_text="확인 또는 생성할 도서의 ISBN 값",
+        max_length=20
+    )
+
 
 class BookListSerializer(serializers.Serializer):
     keyword = serializers.CharField()  # 검색어
