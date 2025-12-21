@@ -1,0 +1,144 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, div, span,
+h1, h2, h3, h4, h5, h6, p, a, em, small, strong, b, u, i, 
+dl, dt, dd, ol, ul, li, fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+}
+
+.f-pre {
+  font-family: 'Pretendard', sans-serif;
+}
+
+.fc-red {
+  color: #FF4C4C;
+}
+
+/* ===== common style ===== */
+.bg-container {
+  margin: 0 50px;
+  border-radius: 80px 80px 0 0;
+  background: linear-gradient(90deg, rgba(69, 106, 255, 0.05) 0%, rgba(163, 58, 255, 0.05) 100%);
+  padding: 120px 150px 150px;
+}
+
+.page-title {
+  font-size: 46px;
+  font-weight: 800;
+  margin-bottom: 40px;
+  color: #111;
+}
+
+/* ===== form ===== */
+.form-style {
+  width:500px;
+  background-color: #fff;
+  padding: 50px;
+  border-radius: 20px 60px 20px 60px;
+  margin: 0 auto;
+}
+
+.error-msg {
+  margin-top: 5px;
+  font-size: 16px;
+  color: #FF4C4C;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.text-input {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  color: #333;
+  font-size: 16px;
+}
+
+.file-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  color: #333;
+  font-size: 16px;
+}
+
+.form-label {
+  font-size: 16px;
+  color: #333;
+  display: block;
+  text-align: left;
+  margin: 20px 0 8px;
+  position: relative;
+}
+
+.form-label.required::after {
+  position:absolute;
+  content: '*';
+  color: #FF4C4C;
+  padding-left: 3px;
+}
+
+.text-input::placeholder {
+  color: #999;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #1a1a1a;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition-duration: .2s;
+}
+
+.btn-submit:hover {
+  background-color: #456AFF;
+}
+
+
+/* ===== modal ===== */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  width: 500px;
+  padding: 40px 30px 50px;
+  background: #fff;
+  border-radius: 20px 60px 20px 60px;
+  text-align: left;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+.modal-header .title {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.modal .btn-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
