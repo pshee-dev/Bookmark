@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'reviews',
     'galfies',
     'comments',
+    'corsheaders', # CORS header 관련 설정
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
     'rest_framework.authtoken', # dj-rest-auth 관련 설정 - start
@@ -64,6 +65,7 @@ SITE_ID = 1 # dj-rest-auth 관련 설정
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # CORS header 관련 설정 (CommonMiddleware 보다 상단에 위치해야함)
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -184,3 +186,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny', # 전역 권한은 모든 사용자 접근 허용(AllowAny)
     ],
 }
+
+# CORS 경로 설정 (리소스에 접근을 허용할 출처 URL)
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+]
