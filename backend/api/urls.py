@@ -28,8 +28,10 @@ urlpatterns = [
     path('api/v1/accounts/', include('dj_rest_auth.urls')),
     path('api/v1/users/', include('accounts.urls')), # 인증 관련 경로보다 아래에 위치해야함
     path('api/v1/books/', include('books.urls')),
+    path('api/v1/libraries/', include('libraries.urls')),
     path('api/v1/reviews/', include('reviews.urls')),
     path('api/v1/galfies/', include('galfies.urls')),
+    path('api/v1/comments/', include('comments.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

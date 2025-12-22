@@ -8,7 +8,7 @@ class BookExceptionHandler(Exception):
         self.dev_message = dev_message
         self.cause = cause
         if self.dev_message: # 로거가 없으므로 에러찾기용으로 임시적용
-            print(self.dev_message)
+            print(dev_message)
         if user_message:
             self.user_message=user_message
         super().__init__(dev_message)

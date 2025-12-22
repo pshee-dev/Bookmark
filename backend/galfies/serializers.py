@@ -1,14 +1,14 @@
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 
+from books.serializers import BookSimpleSerializer
 from .models import Galfy
-from accounts.serializers import UserProfileSerializer
-from books.serializers import BookSerializer, BookSummarySerializer
+from accounts.accounts_serializers.serializers import UserProfileSerializer
 
 
 class GalfySerializer(serializers.ModelSerializer):
-    book = BookSummarySerializer(read_only=True)
+    book = BookSimpleSerializer(read_only=True)
     user = UserProfileSerializer(read_only=True)
+    comments_count = serializers.IntegerField(source="comments.count", read_only=True)
     class Meta:
         model = Galfy
         fields = [
@@ -19,8 +19,8 @@ class GalfySerializer(serializers.ModelSerializer):
             'updated_at',
             'user',
             'book',
+            'comments_count',
             # TODO 좋아요 개수 추가
-            # TODO 댓글 개수 추가
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'book']
 

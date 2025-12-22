@@ -19,7 +19,6 @@ class CustomSignupSerializer(RegisterSerializer):
         user.save()
         return user
 
-
 # [Login] 로그인 시 사용하지 않는 필드 제거
 class CustomLoginSerializer(LoginSerializer):
     email = None
@@ -30,8 +29,8 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta:        
         model = User
-        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'profile_img')
-        read_only_fields = ('username',)
+        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'profile_img', 'full_name')
+        read_only_fields = ('username', 'full_name')
 
 
 # [Profile] 유저 프로필 페이지 조회 - GET
@@ -40,8 +39,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # Todo: reviews_count, galfies_count
     followings_count = serializers.IntegerField(read_only=True)
     followers_count = serializers.IntegerField(read_only=True)
-    # reviews_count = serializers.IntegerField(read_only=True)
-    # galfies_count = serializers.IntegerField(read_only=True)
+    # reviews_count = accounts_serializers.IntegerField(read_only=True)
+    # galfies_count = accounts_serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
