@@ -25,6 +25,10 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   padding: 120px 150px 150px;
 }
 
+.main-section:not(:first-child) {
+  margin-top: 150px;
+}
+
 .page-title {
   font-size: 46px;
   font-weight: 800;
@@ -159,25 +163,24 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 @keyframes fadeInLeft80 { 0% {transform:translateX(-80px);} 100% {transform:translateX(0); opacity:1;} }
 @keyframes fadeInRight80 { 0% {transform:translateX(80px);} 100% {transform:translateX(0); opacity:1;} }
 
-.bounce, .btn-bounce, .rotate-r, .rotate-l,
 .fadein, .fadeinup, .fadeindown, .fadeinleft, .fadeinright,
 .fadeinup80, .fadeindown80, .fadeinleft80, .fadeinright80 {
   opacity: 0;
 }
 
-.bounce.show {
+.bounce:hover {
   animation: bounce .75s ease-in-out forwards;
 }
 
-.btn-bounce.show {
+.btn-bounce:hover {
   animation: btnBounce .75s ease-in-out forwards;
 }
 
-.rotate-r.show {
+.rotate-r {
   animation: rotateR 1s linear forwards;
 }
 
-.rotate-l.show {
+.rotate-l {
   animation: rotateL 1s linear forwards;
 }
 

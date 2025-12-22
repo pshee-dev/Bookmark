@@ -34,40 +34,42 @@
 </script>
 
 <template>
-  <div class="tit-wrap">
-    <h1 class="page-title">베스트 셀러</h1>
-    <div class="btn-swiper">
-      <button class="btn-prev"><img src="@/assets/images/common/icon_arrow_left.png" alt="이전 버튼"></button>
-      <button class="btn-next"><img src="@/assets/images/common/icon_arrow_left.png" alt="다음 버튼"></button>
+  <section class="main-book main-section">
+    <div class="tit-wrap">
+      <h1 class="page-title">베스트 셀러</h1>
+      <div class="btn-swiper">
+        <button class="btn-prev"><img src="@/assets/images/common/icon_arrow_left.png" alt="이전 버튼"></button>
+        <button class="btn-next"><img src="@/assets/images/common/icon_arrow_left.png" alt="다음 버튼"></button>
+      </div>
     </div>
-  </div>
 
-  <Swiper 
-    class="book-list"
-    :modules="[Autoplay, Navigation]"
-    :slides-per-view="6"
-    :space-between="20"
-    :loop="true"
-    :autoplay="{ delay: 2000, disableOnInteraction: false }"
-    :navigation="{
-      nextEl: '.btn-next',
-      prevEl: '.btn-prev',
-    }"
-  >
-    <SwiperSlide 
-      v-for="book in bookList"
-      :key="book.isbn13"
+    <Swiper 
+      class="book-list"
+      :modules="[Autoplay, Navigation]"
+      :slides-per-view="6"
+      :space-between="20"
+      :loop="true"
+      :autoplay="{ delay: 2000, disableOnInteraction: false }"
+      :navigation="{
+        nextEl: '.btn-next',
+        prevEl: '.btn-prev',
+      }"
     >
-      <div class="thumbnail">
-        <img v-if="book.cover" :src="book.cover" :alt="book.title">
-        <!-- <img v-else src="@/assets/images/no_img_bookcover.jpg" alt="no-image"> -->
-      </div>
-      <div class="info">
-        <h2 class="title">{{ book.title }}</h2>
-        <p class="author">{{ book.author }}</p>
-      </div>
-    </SwiperSlide>
-  </Swiper>
+      <SwiperSlide 
+        v-for="book in bookList"
+        :key="book.isbn13"
+      >
+        <div class="thumbnail">
+          <img v-if="book.cover" :src="book.cover" :alt="book.title">
+          <!-- <img v-else src="@/assets/images/no_img_bookcover.jpg" alt="no-image"> -->
+        </div>
+        <div class="info">
+          <h2 class="title">{{ book.title }}</h2>
+          <p class="author">{{ book.author }}</p>
+        </div>
+      </SwiperSlide>
+    </Swiper>
+  </section>
 </template>
 
 <style scoped>
