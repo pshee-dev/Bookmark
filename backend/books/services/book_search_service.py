@@ -216,10 +216,10 @@ def parse_google_books_data(data_list):
         thumbnail_url_set = volume_info.get("imageLinks") or {}
         # Google Books가 주는 대표 키들 (항상 있는 건 아님)
         thumbnail_url = (
-                thumbnail_url_set.get("thumbnail")
+                thumbnail_url_set.get("medium")
+                or thumbnail_url_set.get("thumbnail")
                 or thumbnail_url_set.get("small")
                 or thumbnail_url_set.get("smallThumbnail")
-                or thumbnail_url_set.get("medium")
                 or thumbnail_url_set.get("large")
                 or thumbnail_url_set.get("extraLarge")
                 or ""

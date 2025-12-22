@@ -53,9 +53,9 @@ const router = createRouter({
       component: () => import('@/views/FeedView.vue'),
       meta: { requiresAuth: true },
       children: [
-        { path: '', name: 'feed', component: () => import('@/components/feed/FeedGalfyList.vue') },
-        { path: 'galfy', name: 'feedGalfyList', component: () => import('@/components/feed/FeedGalfyList.vue') },
-        { path: 'review', name: 'feedReviewList', component: () => import('@/components/feed/FeedReviewList.vue') },
+        { path: '', name: 'feed', component: () => import('@/components/FeedGalfyList.vue') },
+        { path: 'galfy', name: 'feedGalfyList', component: () => import('@/components/FeedGalfyList.vue') },
+        { path: 'review', name: 'feedReviewList', component: () => import('@/components/FeedReviewList.vue') },
       ],
     },
 

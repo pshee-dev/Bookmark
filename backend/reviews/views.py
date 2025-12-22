@@ -28,7 +28,7 @@ def list_and_create(request, book_id):
         )
 
     # GET일 경우 리뷰 리스트 반환
-    queryset = Review.objects.all()
+    queryset = Review.objects.filter(book_id=book_id)
     sort_direction = request.query_params.get('sort-direction', 'desc')
     sort_field = request.query_params.get('sort-field', 'created_at')
 

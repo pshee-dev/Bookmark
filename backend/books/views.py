@@ -47,14 +47,14 @@ def resolve_by_isbn(request):
     (프론트에서 해당 id를 참고하여 해당 도서 상세정보 url로 이동시키기 위한 정보 제공)
     """
     raw_isbn = request.data.get("isbn")
-    isbn = raw_isbn.strip()
-    if not isbn:
+    if not raw_isbn:
         return Response({
             "error": {
                 "code": "invalid_isbn",
                 "message": "현재 서비스 이용이 불가하오니, 나중에 다시 시도해 주세요."
             }
         }, status=STATUS_MAP[400])
+    isbn = raw_isbn.strip()
     book = Book.objects.filter(isbn=isbn)
     #TODO 동일 도서이지만 제목이 조금씩 달라, isbn이 다른 똑같은 책이 여러 권 생성되는 문제에 대해 고민해보기
     if book: 

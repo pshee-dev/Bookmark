@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -28,7 +28,7 @@ def list_and_create(request, book_id):
         )
 
     # GET일 경우 갈피 리스트 반환
-    queryset = Galfy.objects.all()
+    queryset = Galfy.objects.filter(book_id=book_id)
     sort_direction = request.query_params.get('sort-direction', 'desc')
     sort_field = request.query_params.get('sort-field', 'created_at')
 
