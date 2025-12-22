@@ -16,6 +16,8 @@
     align-items: center;
     flex-direction: column;
     gap: 20px;
+    width: 100%;
+    min-height: 380px;
   }
 
   img {
