@@ -55,6 +55,7 @@
     transition-duration: .2s;
     border: 2px solid transparent;
     cursor: pointer;
+    margin-bottom: 20px;
   }
 
   .feed-card:hover {
@@ -103,6 +104,7 @@
 
   .title {
     font-size: 20px;
+    font-weight: 600;
     color: #333;
   }
 
