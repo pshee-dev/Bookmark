@@ -167,9 +167,9 @@ ACCOUNT_EMAIL_VERIFICATION = 'none' # dj-rest-auth 이메일 인증 비활성화
 
 # dj-rest-auth 커스텀한 시리얼라이저 등록
 REST_AUTH = {
-    'LOGIN_SERIALIZER': 'accounts.serializers.CustomLoginSerializer',
-    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
-    'REGISTER_SERIALIZER': 'accounts.serializers.CustomSignupSerializer',
+    'LOGIN_SERIALIZER': 'accounts.accounts_serializers.serializers.CustomLoginSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.accounts_serializers.serializers.CustomUserDetailsSerializer',
+    'REGISTER_SERIALIZER': 'accounts.accounts_serializers.serializers.CustomSignupSerializer',
 }
 
 
@@ -183,3 +183,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny', # 전역 권한은 모든 사용자 접근 허용(AllowAny)
     ],
 }
+
+# CORS 경로 설정 (리소스에 접근을 허용할 출처 URL)
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+]
