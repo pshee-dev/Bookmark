@@ -13,6 +13,8 @@
   const bookStore = useBookStore()
   const { searchType, searchKeyword } = storeToRefs(bookStore)
 
+  const localKeyword = ref(null)
+
   // 전체 검색 옵션
   const searchOptions = [
     { value: 'title', label: '제목 검색'},
@@ -35,6 +37,8 @@
   
   // 검색
   const search = () => {
+    searchKeyword.value = localKeyword.value
+    localKeyword.value = ''
     bookStore.search()
   }
 </script>
@@ -69,7 +73,7 @@
         </div>
 
         <input 
-          v-model="searchKeyword" 
+          v-model="localKeyword" 
           class="input-search" 
           type="text"
           placeholder="검색어를 입력하세요."
