@@ -27,32 +27,32 @@ def list_and_create(request, book_id):
             status=status.HTTP_201_CREATED
         )
 
-    # GET일 경우 갈피 리스트 반환
-    queryset = Galfy.objects.all()
-    sort_direction = request.query_params.get('sort-direction', 'desc')
-    sort_field = request.query_params.get('sort-field', 'created_at')
+    if request.method == 'GET':
+        queryset = Galfy.objects.all()
+        sort_direction = request.query_params.get('sort-direction', 'desc')
+        sort_field = request.query_params.get('sort-field', 'created_at')
 
-    # 정렬 기준 필드
-    SORT_TYPE_MAP = {
-        'popularity': 'popularity',
-        'created_at': 'created_at',
-    }
-    #TODO 코멘트처럼 파라미터 예외처리 추가
-    # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
-    sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
-    # TODO 페이지 사이즈 쿼리 추가
-    # TODO likes 모델 생성한 후 인기도순 로직 점검
-    ''' 
-    if sort_field == 'popularity':
-        queryset = queryset.annotate(
-            like_count=Count('likes')
-        ) 
-    '''
+        # 정렬 기준 필드
+        SORT_TYPE_MAP = {
+            'popularity': 'popularity',
+            'created_at': 'created_at',
+        }
+        #TODO 코멘트처럼 파라미터 예외처리 추가
+        # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
+        sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
+        # TODO 페이지 사이즈 쿼리 추가
+        # TODO likes 모델 생성한 후 인기도순 로직 점검
+        ''' 
+        if sort_field == 'popularity':
+            queryset = queryset.annotate(
+                like_count=Count('likes')
+            ) 
+        '''
 
-    page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
-    serializer = GalfySerializer(page, many=True)
+        page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
+        serializer = GalfySerializer(page, many=True)
 
-    return paginator.get_paginated_response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
