@@ -127,19 +127,20 @@ class LibraryBookCreateSerializer(LibraryBookBaseSerializer):
 
 # [GET] 내 서재에 있는 도서 상세 조회 - /library/{library_id}
 class LibraryBookDetailSerializer(serializers.ModelSerializer):
-    
-    class BookDetailSerializer(BookBaseSerializer):
-        category = serializers.CharField(source='category.name', read_only=True)
-        class Meta(BookBaseSerializer.Meta):
-            fields = BookBaseSerializer.Meta.fields + ('isbn', 'category')
-
-    book = BookDetailSerializer(read_only=True)
-
-    class Meta:
+class Meta(LibraryBookBaseSerializer.Meta):
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating', 'current_page', 'book')
-
-    # Todo: 연결된 리뷰/갈피 데이터 불러오기
+        fields = (
+            'id',
+            'book',
+            'user',
+            'status',
+            'created_at',
+            'start_date',
+            'finish_date',
+            'rating',
+            'current_page'
+        )
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'book']
 
 
 # [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}

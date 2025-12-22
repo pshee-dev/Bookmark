@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
+
+from books.serializers import BookSerializer
 from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
 from common.utils.paginations import apply_queryset_pagination
@@ -61,7 +63,9 @@ def library_book(request, library_id):
 
     # 독서 상태 상세 조회
     if request.method == 'GET':
-        serializer = LibraryBookDetailSerializer(library)
+        library_serializer = LibraryBookDetailSerializer(library)
+        book_serializer = BookSerializer(library.book)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 독서 상태 수정
