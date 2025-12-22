@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'libraries',
     'reviews',
     'galfies',
+    'comments',
+    'likes',
+    'corsheaders', # CORS header 관련 설정
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
     'rest_framework.authtoken', # dj-rest-auth 관련 설정 - start
@@ -63,6 +66,7 @@ SITE_ID = 1 # dj-rest-auth 관련 설정
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # CORS header 관련 설정 (CommonMiddleware 보다 상단에 위치해야함)
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
