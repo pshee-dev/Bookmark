@@ -177,11 +177,11 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 }
 
 .rotate-r {
-  animation: rotateR 1s linear forwards;
+  animation: rotateR 3s linear infinite;
 }
 
 .rotate-l {
-  animation: rotateL 1s linear forwards;
+  animation: rotateL 3s linear infinite;
 }
 
 .fadein.show {
