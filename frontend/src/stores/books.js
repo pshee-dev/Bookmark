@@ -102,6 +102,34 @@ export const useBookStore = defineStore('book', () => {
     }
   }
 
+  // 상세보기 직접 접근 시 (URL 직접 접근 대응)
+  const fetchBookDetail = async (bookId) => {
+    if (!bookId) return
+
+    // 이미 같은 책이 store에 있으면 재요청 안 함
+    if (bookDetail.value.id === Number(bookId)) {
+      return
+    }
+
+    isLoading.value = true
+    try {
+      const res = await axios.get(
+        `${API_URL}/books/${bookId}/`
+      )
+      bookDetail.value = res.data
+    } catch (err) {
+      if (err.response) {
+        errorStatus.value = err.response.data?.error?.code || 'unknown_error'
+        errorStore.openErrorModal(
+          err.response.data?.error?.message || '도서 정보를 불러오지 못했습니다.'
+        )
+      }
+      console.error('fetchBookDetail error:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // 검색어 초기화 (캐시 비우기)
   const resetSearch = () => {
     searchKeyword.value = null
@@ -125,6 +153,7 @@ export const useBookStore = defineStore('book', () => {
     fetchBooks,
     goDetail,
     // resetSearch,
+    fetchBookDetail,
   }
 }, {
   persist: [

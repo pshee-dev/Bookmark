@@ -1,9 +1,21 @@
 <script setup>
-  import { useBookStore } from '@/stores/books'
+  import { onMounted, computed } from 'vue'
+  import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
+  import { useBookStore } from '@/stores/books'
+
+  const route = useRoute()
+  const bookId = computed(() => route.params.bookId)
+
   const bookStore = useBookStore()
   const { bookDetail } = storeToRefs(bookStore)
 
+  onMounted(() => {
+    // URL 직접 접근 대비
+    if (!bookDetail.value.id || bookDetail.value.id !== Number(bookId.value)) {
+      bookStore.fetchBookDetail(bookId.value)
+    }
+  })
 </script>
 
 <template>
