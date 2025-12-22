@@ -142,3 +142,77 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   cursor: pointer;
   padding: 0;
 }
+
+
+/* ===== keyframe animation ===== */
+@keyframes bounce { 0% {transform:scale(1);} 50% {transform:scale(1.05);} 100% {transform:scale(1);} }
+@keyframes btnBounce {	0% {transform:translateX(0);} 50% {transform:translateX(8px);} 100% {transform:translateX(0);} }
+@keyframes rotateR { 0% {transform:rotate(0deg);} 100% {transform:rotate(360deg);} }
+@keyframes rotateL { 0% {transform:rotate(0deg);} 100% {transform:rotate(-360deg);} }
+@keyframes fadeIn { 0% {opacity:0;} 100% {opacity:1;} }
+@keyframes fadeInUp { 0% {transform:translateY(100%);} 100% {transform:translateY(0); opacity:1;} }
+@keyframes fadeInDown { 0% {transform:translateY(-100%);} 100% {transform:translateY(0); opacity:1;} }
+@keyframes fadeInLeft { 0% {transform:translateX(-100%);} 100% {transform:translateX(0); opacity:1;} }
+@keyframes fadeInRight { 0% {transform:translateX(100%);} 100% {transform:translateX(0); opacity:1;} }
+@keyframes fadeInUp80 { 0% {transform:translateY(80px);} 100% {transform:translateY(0); opacity:1;} }
+@keyframes fadeInDown80 { 0% {transform:translateY(-80px);} 100% {transform:translateY(0); opacity:1;} }
+@keyframes fadeInLeft80 { 0% {transform:translateX(-80px);} 100% {transform:translateX(0); opacity:1;} }
+@keyframes fadeInRight80 { 0% {transform:translateX(80px);} 100% {transform:translateX(0); opacity:1;} }
+
+.bounce, .btn-bounce, .rotate-r, .rotate-l,
+.fadein, .fadeinup, .fadeindown, .fadeinleft, .fadeinright,
+.fadeinup80, .fadeindown80, .fadeinleft80, .fadeinright80 {
+  opacity: 0;
+}
+
+.bounce.show {
+  animation: bounce .75s ease-in-out forwards;
+}
+
+.btn-bounce.show {
+  animation: btnBounce .75s ease-in-out forwards;
+}
+
+.rotate-r.show {
+  animation: rotateR 1s linear forwards;
+}
+
+.rotate-l.show {
+  animation: rotateL 1s linear forwards;
+}
+
+.fadein.show {
+  animation: fadeIn .75s ease-in-out forwards;
+}
+
+.fadeinup.show {
+  animation: fadeInUp .75s ease-in-out forwards;
+}
+
+.fadeindown.show {
+  animation: fadeInDown .75s ease-in-out forwards;
+}
+
+.fadeinleft.show {
+  animation: fadeInLeft .75s ease-in-out forwards;
+}
+
+.fadeinright.show {
+  animation: fadeInRight .75s ease-in-out forwards;
+}
+
+.fadeinup80.show {
+  animation: fadeInUp80 .75s ease-in-out forwards;
+}
+
+.fadeindown80.show {
+  animation: fadeInDown80 .75s ease-in-out forwards;
+}
+
+.fadeinleft80.show {
+  animation: fadeInLeft80 .75s ease-in-out forwards;
+}
+
+.fadeinright80.show {
+  animation: fadeInRight80 .75s ease-in-out forwards;
+}
