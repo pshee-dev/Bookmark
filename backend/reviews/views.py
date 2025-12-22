@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.status import HTTP_403_FORBIDDEN
 from books.models import Book
 from common.utils.paginations import apply_queryset_pagination
+from likes.models import Like
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 
@@ -76,8 +77,7 @@ def detail_and_update_and_delete(request, review_id):
             ReviewSerializer(review).data,
             status=status.HTTP_200_OK
         )
-
-    if request.method == 'DELETE':
+    elif request.method == 'DELETE':
         if not is_author(request, review):
             return Response({
                 "error": {
@@ -85,14 +85,21 @@ def detail_and_update_and_delete(request, review_id):
                     "message": "잘못된 접근입니다."
                 }
             }, status=HTTP_403_FORBIDDEN)
+
+        # 해당 리뷰에 달린 좋아요 기록도 함께 삭제
+        Like.objects.filter( # 외래키 참조관계가 아니므로 역참조 불가
+            target_type=Like.TargetType.REVIEW,
+            target_id=review.id
+        ).delete()
+
         review.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # GET일 경우 리뷰 상세정보 반환
-    return Response(
-        ReviewSerializer(review).data,
-        status=status.HTTP_200_OK
-    )
+    if request.method == 'GET':
+        return Response(
+            ReviewSerializer(review).data,
+            status=status.HTTP_200_OK
+        )
 
 # 추후 커스텀 퍼미션으로 정의하는 방식으로 리팩토링 가능
 def is_author(request, review):
