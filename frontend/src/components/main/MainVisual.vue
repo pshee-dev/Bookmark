@@ -1,5 +1,6 @@
-<script setup>
+﻿<script setup>
   import { useRouter } from 'vue-router'
+  import { computed } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useAccountStore } from '@/stores/accounts'
 
@@ -20,6 +21,7 @@
     router.push({name: 'login'})
   }
   const goLibrary = () => {
+    if (!user.value?.username) return
     router.push({name: 'libraries', params: {username: user.value.username}})
   }
 </script>
@@ -35,7 +37,7 @@
         <button @click.stop="goLogin" class="btn">로그인</button>
       </template>
       <template v-else>
-        <p class="txt f-pre"><b class="f-pre">{{ user.name }}</b>님, 안녕하세요 :&#41; <br>천천히 읽고 가볍게 기록하여 독서 습관을 길러보세요.</p>
+        <p class="txt f-pre"><b class="f-pre">{{ user?.name ? user?.name : '회원' }}</b>님, 안녕하세요 :&#41; <br>천천히 읽고 가볍게 기록하여 독서 습관을 길러보세요.</p>
         <button @click.stop="goLibrary" class="btn">내 서재 바로가기</button>
       </template>
     </div>
