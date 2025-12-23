@@ -126,6 +126,7 @@
   }
 
   .info p {
+    display: flex;
     font-size: 18px;
     margin-top: 12px;
     line-height: 1.2;

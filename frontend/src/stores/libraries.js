@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+﻿import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { defineStore, storeToRefs } from 'pinia'
 import { useErrorStore } from '@/stores/errors'
@@ -76,6 +76,26 @@ export const useLibraryStore = defineStore('library', () => {
       })
   }
 
+  const fetchLibraryDetail = async (libraryId) => {
+    if (!libraryId) return
+    isLoading.value = true
+    try {
+      const res = await axios.get(
+        `${API_URL}/libraries/${libraryId}/`,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`
+          },
+        }
+      )
+      libraryBook.value = res.data?.library ?? {}
+    } catch (err) {
+      errorStore.handleRequestError(err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const createLibrary = async (bookId, payload) => {
     isLoading.value = true
     try {
@@ -92,7 +112,7 @@ export const useLibraryStore = defineStore('library', () => {
         },
       )
       libraryBook.value = res.data
-      router.push({ name: 'reading', params: { username: user.value.username, libraryId: res.data.id } })
+      router.push({ name: 'library', params: { username: user.value.username, libraryId: res.data.id } })
     } catch (err) {
       errorStore.handleRequestError(err)
     } finally {
@@ -113,7 +133,7 @@ export const useLibraryStore = defineStore('library', () => {
         }
       )
       libraryBook.value = res.data
-      router.push({ name: 'reading', params: { username: user.value.username, libraryId: res.data.id } })
+      router.push({ name: 'library', params: { username: user.value.username, libraryId: res.data.id } })
     } catch (err) {
       errorStore.handleRequestError(err)
     } finally {
@@ -172,6 +192,7 @@ export const useLibraryStore = defineStore('library', () => {
     libraryBookList,
     hasMore,
     fetchBookList,
+    fetchLibraryDetail,
     createLibrary,
     updateLibrary,
     deleteLibrary,
@@ -186,3 +207,5 @@ export const useLibraryStore = defineStore('library', () => {
     submitLibrary,
   }
 })
+
+

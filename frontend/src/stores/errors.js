@@ -11,6 +11,7 @@ export const useErrorStore = defineStore('error', () => {
 
   // 공통 에러 핸들러
   const handleRequestError = (err) => {
+    if (err.status !== 400) return
     const data = err.response?.data ?? null
     const message = ref('요청을 처리하지 못했습니다.')
 

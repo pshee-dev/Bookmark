@@ -5,6 +5,8 @@ import { useErrorStore } from '@/stores/errors'
 import axios from 'axios'
 
 export const useFeedStore = defineStore('feed', () => {
+  const errorStore = useErrorStore()
+  
   const API_URL = import.meta.env.VITE_API_URL
   
   const galfyList = ref([])
