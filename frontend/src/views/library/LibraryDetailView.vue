@@ -118,7 +118,7 @@
           </ul>
         </p>
         <p v-if="libraryBook.start_date"><span class="cate">독서 날짜</span> {{ libraryBook.start_date }} ~ <span v-if="libraryBook.finish_date">{{ libraryBook.finish_date }}</span></p>
-        <p v-if="libraryBook.current_page"><span class="cate">독서량</span> {{ libraryBook.current_page }} / {{ book.page }} 페이지</p>
+        <p v-if="libraryBook.current_page"><span class="cate">독서량</span> {{ libraryBook.current_page }}<span v-if="book.page">&nbsp;/ {{ book.page }}</span>&nbsp;페이지</p>
         <p>
           <span class="cate">리뷰</span> 
           <template v-if="book.reviews.length === 0">작성 전 <button @click="createReview" class="btn-review">리뷰 작성하기 ></button></template>
