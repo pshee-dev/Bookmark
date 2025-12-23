@@ -10,7 +10,7 @@ class Book(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=100, blank=True)
     publisher = models.CharField(max_length=150, blank=True)
-    published_date = models.DateField(null=True)
+    published_date = models.CharField(null=True)
     isbn = models.CharField(max_length=20, blank=True)
     page = models.IntegerField(null=True)
     thumbnail = models.URLField(max_length=500, blank=True)

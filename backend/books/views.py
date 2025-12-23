@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+
 from .models import Book
-from .serializers import BookSerializer, BookListSerializer
+from .serializers import BookSerializer, BookListSerializer, ISBNResolveSerializer
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
@@ -15,63 +17,207 @@ STATUS_MAP = {
     504: status.HTTP_504_GATEWAY_TIMEOUT,
 }
 
+@extend_schema(
+    tags=["Books"],
+    summary="도서 검색",
+    description="""
+    키워드를 기반으로 외부 도서 API를 호출하여 검색 결과를 반환합니다.
+
+    - 제목(title) 또는 저자(author) 기준 검색 가능
+    - 페이지네이션을 지원하며, page / page_size를 통해 제어합니다.
+    - 실제 DB 검색이 아닌 외부 API 기반 검색입니다.
+    """,
+    parameters=[
+        OpenApiParameter(
+            name="keyword",
+            description="검색 키워드 (공백 가능, 없을 경우 빈 문자열로 처리)",
+            required=False,
+            type=str
+        ),
+        OpenApiParameter(
+            name="field",
+            description="검색 기준 필드 (title | author)",
+            required=False,
+            type=str
+        ),
+        OpenApiParameter(
+            name="page",
+            description="조회할 페이지 번호 (기본값: 1)",
+            required=False,
+            type=int
+        ),
+        OpenApiParameter(
+            name="page_size",
+            description="페이지당 결과 개수 (기본값: 10, 최대 40)",
+            required=False,
+            type=int
+        ),
+    ],
+    responses={200: BookListSerializer}
+)
 @api_view(['GET'])
 def search(request):
-    keyword = (request.query_params.get("keyword") or "").strip()
-    field = (request.query_params.get("field") or "title").strip().lower() # title or author
-    page_size = request.query_params.get("page_size", '10') # 기본값 10, 최대값 40. 1미만/40초과 시 1/최대값으로 대체.
-    page = request.query_params.get("page", '1') # 기본값 1. 입력값이 1 미만일 시, 기본값으로 대체.
-    try:
-        search_results = search_books(keyword, field, page_size, page)
-        return Response(BookListSerializer(search_results).data, status=status.HTTP_200_OK)
-    except BookExceptionHandler as e:
-        return Response({
-            "error": {
-                "code": e.code,
-                "message": e.user_message,
-            }
-        }, status=STATUS_MAP[e.http_status])
+    """
+    [Books] 도서 검색 API
 
+    외부 도서 API를 통해 검색 결과를 조회합니다.
+    DB에 저장되지 않은 도서도 검색 결과로 반환될 수 있습니다.
+    """
+
+    # 검색 키워드 (None 방지 → 항상 문자열)
+    keyword = (request.query_params.get("keyword") or "").strip()
+
+    # 검색 기준 필드 (기본값: title)
+    field = (request.query_params.get("field") or "title").strip().lower()
+
+    # 페이지 사이즈 (문자열로 들어오므로 내부에서 변환 처리)
+    page_size = request.query_params.get("page_size", '10')
+
+    # 페이지 번호
+    page = request.query_params.get("page", '1')
+
+    try:
+        # 외부 API 검색 로직 호출
+        search_results = search_books(keyword, field, page_size, page)
+
+        # 리스트 전용 Serializer 사용
+        return Response(
+            BookListSerializer(search_results).data,
+            status=status.HTTP_200_OK
+        )
+
+    except BookExceptionHandler as e:
+        # 외부 API 오류 / 데이터 오류 등을 공통 포맷으로 변환
+        return Response(
+            {
+                "error": {
+                    "code": e.code,
+                    "message": e.user_message,
+                }
+            },
+            status=STATUS_MAP[e.http_status]
+        )
+
+
+@extend_schema(
+    tags=["Books"],
+    summary="Book detail",
+    description="Retrieve book detail by id.",
+    parameters=[
+        OpenApiParameter(
+            name="book_id",
+            description="Book id",
+            required=True,
+            type=int,
+            location=OpenApiParameter.PATH,
+        ),
+    ],
+    responses={200: BookSerializer},
+)
 @api_view(['GET'])
 def detail(request, book_id):
+    """
+    [Books] 도서 상세 조회 API
+
+    - book_id를 기준으로 DB에 저장된 도서 정보를 반환합니다.
+    - 존재하지 않을 경우 404 반환
+    """
+
+    # DB에 존재하는 도서만 조회 가능
     book = get_object_or_404(Book, id=book_id)
+
     serializer = BookSerializer(book)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['GET','POST'])
+@extend_schema(
+    tags=["Books"],
+    summary="ISBN 기반 도서 확인 또는 생성",
+    description="""
+    ISBN을 기준으로 도서의 DB 존재 여부를 확인합니다.
+
+    - 이미 존재하면 해당 도서 ID 반환 (200)
+    - 존재하지 않으면 외부 API를 통해 도서 생성 후 ID 반환 (201)
+    """,
+
+    request=ISBNResolveSerializer,
+    examples=[
+        OpenApiExample(
+            "ISBN Example",
+            value={"isbn": "9791192742175"},
+            request_only=True
+        )
+    ],
+    responses={
+        200: OpenApiResponse(
+            response=None,
+            description="이미 존재하는 도서 → book_id 반환"
+        ),
+        201: OpenApiResponse(
+            response=None,
+            description="신규 도서 생성 → book_id 반환"
+        )
+    }
+)
+@api_view(['POST'])
 def resolve_by_isbn(request):
     """
-    검색된 책 리스트 중 하나를 선택 시, 해당 요소 isbn 정보로 db 내 존재여부를 확인한 후 \n
-    - a. db에 해당 도서 존재 시 -> 해당도서 id와 함께 200 반환 \n
-    - b. db에 해당 도서 부재 시 -> 생성 후 해당도서 id와 함께 201 반환
-    (프론트에서 해당 id를 참고하여 해당 도서 상세정보 url로 이동시키기 위한 정보 제공)
+    [Books] ISBN 기반 도서 Resolve API
+
+    검색 결과 중 하나를 선택했을 때,
+    해당 도서가 DB에 존재하는지 확인하고 없으면 생성합니다.
     """
+
     raw_isbn = request.data.get("isbn")
-    if not raw_isbn:
-        return Response({
-            "error": {
-                "code": "invalid_isbn",
-                "message": "현재 서비스 이용이 불가하오니, 나중에 다시 시도해 주세요."
-            }
-        }, status=STATUS_MAP[400])
-    isbn = raw_isbn.strip()
+
+    isbn = raw_isbn.strip() if raw_isbn else ""
+
+    # ISBN 유효성 검사
+    if not isbn:
+        return Response(
+            {
+                "error": {
+                    "code": "invalid_isbn",
+                    "message": "현재 서비스 이용이 불가하오니, 나중에 다시 시도해 주세요."
+                }
+            },
+            status=STATUS_MAP[400]
+        )
+
+    # ISBN으로 기존 도서 존재 여부 확인
+
     book = Book.objects.filter(isbn=isbn)
-    #TODO 동일 도서이지만 제목이 조금씩 달라, isbn이 다른 똑같은 책이 여러 권 생성되는 문제에 대해 고민해보기
-    if book: 
-        return Response({'book_id': book.get().id}, status=status.HTTP_200_OK)
-    
-    # 책 정보가 db에 저장되어있지 않을 경우 새로 생성
+
+    # 이미 존재하는 경우 → 생성하지 않고 ID 반환
+    if book.exists():
+        return Response(
+            {"book_id": book.get().id},
+            status=status.HTTP_200_OK
+        )
+
+    # 존재하지 않는 경우 → 외부 API 호출 후 생성
     try:
         book_info = get_book_info_by_isbn(isbn)
-    except BookExceptionHandler as e :
-        return Response({
-            "error": {
-                "code": e.code,
-                "message": e.user_message,
-            }
-        }, status=STATUS_MAP[e.http_status])
+
+    except BookExceptionHandler as e:
+        return Response(
+            {
+                "error": {
+                    "code": e.code,
+                    "message": e.user_message,
+                }
+            },
+            status=STATUS_MAP[e.http_status]
+        )
+
+    # Serializer를 통해 새 도서 생성
     serializer = BookSerializer(data=book_info)
-    if serializer.is_valid(raise_exception=True):
-        book = serializer.save(category=book_info['category'])
-    return Response({'book_id': book.id}, status=status.HTTP_201_CREATED)
+    serializer.is_valid(raise_exception=True)
+
+    book = serializer.save(category=book_info['category'])
+
+    return Response(
+        {"book_id": book.pk},
+        status=status.HTTP_201_CREATED
+    )
+
 

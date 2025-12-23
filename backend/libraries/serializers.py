@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+
+from accounts.accounts_serializers.serializers import UserProfileSerializer
+from books.serializers import BookSimpleSerializer, BookWithReviewAndGalfiesSerializerInLibrary
 from .models import Library
 from books.models import Book, Category
 from datetime import date
@@ -101,7 +104,7 @@ class LibraryBookListSerializer(serializers.ModelSerializer):
     book = BookBaseSerializer(read_only=True)
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating', 'book')
+        fields = ('id','status', 'start_date', 'finish_date', 'rating', 'book')
     
     # Todo: 페이지네이션
 
@@ -124,25 +127,15 @@ class LibraryBookCreateSerializer(LibraryBookBaseSerializer):
             )
         ]
 
-
 # [GET] 내 서재에 있는 도서 상세 조회 - /library/{library_id}
 class LibraryBookDetailSerializer(serializers.ModelSerializer):
-    
-    class BookDetailSerializer(BookBaseSerializer):
-        category = serializers.CharField(source='category.name', read_only=True)
-        class Meta(BookBaseSerializer.Meta):
-            fields = BookBaseSerializer.Meta.fields + ('isbn', 'category')
-
-    book = BookDetailSerializer(read_only=True)
+    book = BookWithReviewAndGalfiesSerializerInLibrary()
+    user = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'rating', 'current_page', 'book')
-
-    # Todo: 연결된 리뷰/갈피 데이터 불러오기
-
+        fields = ('id', 'user', 'book', 'status', 'start_date', 'finish_date', 'rating', )
 
 # [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}
 class LibraryBookUpdateSerializer(LibraryBookBaseSerializer):
     pass # 상속받은 serializer에서 추가 필드 없음 (용도에 따른 serializer 네이밍 통일성을 위해 상속 구조 활용)
-        
