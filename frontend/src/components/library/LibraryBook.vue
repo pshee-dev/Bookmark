@@ -1,9 +1,19 @@
 <script setup>
   import { useRouter } from 'vue-router'
+  import { useAccountStore } from '@/stores/accounts'
+  import { storeToRefs } from 'pinia'
+
   const router = useRouter()
+  const accountStore = useAccountStore()
+  const { user } = storeToRefs(accountStore)
+  
   const props = defineProps({
     item: Object,
   })
+
+  const goDetail = () => {
+    router.push({name: 'library', params: { username: user.username, libraryId: props.item.id}})
+  }
 
 </script>
 
@@ -32,7 +42,7 @@
           <span :class="n <= item.rating ? 'filled' : 'empty'">★</span>
         </li>
       </ul>
-      <p v-if="item.start_date" class="f-pre">{{ item.start_date }} ~ <span v-if="item.finished_date">{{ item.finished_date }}</span></p>
+      <p v-if="item.start_date" class="f-pre">{{ item.start_date }} ~ <span v-if="item.finish_date" class="f-pre">{{ item.finish_date }}</span></p>
     </div>
   </div>
 </template>

@@ -17,7 +17,10 @@ export const useLibraryStore = defineStore('library', () => {
   const libraryBookList = ref([])
   const sortDirection = 'desc'
   const sortType = 'created_at'
-  const page = 20
+  const limit = 2 // Todo: 기본 값 10으로 돌려놓기
+  const offset = ref(0)
+  const hasMore = ref(true)
+  const currentStatus = ref(null)
 
   const isLoading = ref(false)
   const libraryBook = ref({})
@@ -29,7 +32,17 @@ export const useLibraryStore = defineStore('library', () => {
   const modalLibraryId = ref(null)
   const modalInitialValue = ref(null)
 
-  const fetchBookList = (status) => {
+  const fetchBookList = (status, { append = false } = {}) => {
+    if (isLoading.value) return
+    if (append && !hasMore.value) return
+
+    if (!append || currentStatus.value !== status) {
+      offset.value = 0
+      hasMore.value = true
+      currentStatus.value = status
+    }
+    isLoading.value = true
+
     axios({
       method: 'get',
       url: `${API_URL}/libraries/`,
@@ -37,7 +50,8 @@ export const useLibraryStore = defineStore('library', () => {
         status: status,
         'sort-direction': sortDirection,
         'sort-type': sortType,
-        page: page,
+        limit: limit,
+        offset: offset.value,
       },
       headers: {
         Authorization: `Token ${token.value}`
@@ -45,10 +59,20 @@ export const useLibraryStore = defineStore('library', () => {
     })
       .then(res => {
         console.log(res.data)
-        libraryBookList.value = res.data.results
+        const results = res.data?.results ?? []
+        if (append) {
+          libraryBookList.value.push(...results)
+        } else {
+          libraryBookList.value = results
+        }
+        offset.value += results.length
+        hasMore.value = !!res.data?.next
       })
       .catch(err => {
         errorStore.handleRequestError(err)
+      })
+      .finally(() => {
+        isLoading.value = false
       })
   }
 
@@ -146,6 +170,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading,
     libraryBook,
     libraryBookList,
+    hasMore,
     fetchBookList,
     createLibrary,
     updateLibrary,

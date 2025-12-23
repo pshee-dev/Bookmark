@@ -20,5 +20,7 @@
 </template>
 
 <style scoped>
-
+ .container-box {
+  padding-bottom: 100px;
+ }
 </style>
