@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'galfies',
     'comments',
     'likes',
+    'recommendations',
     'corsheaders', # CORS header 관련 설정
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
