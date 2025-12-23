@@ -58,10 +58,22 @@
     }
   }
 
-  const username = route.params.username
-
   const feedStore = useFeedStore()
   const { galfyList, galfyCount } = storeToRefs(feedStore)
+
+  const username = route.params.username
+
+  const createReview = () => {
+    // Todo: 리뷰 작성하기
+  }
+
+  const goReview = () => {
+    // Todo: 작성한 리뷰 상세보기
+  }
+
+  const createGalfy = () => {
+    // Todo: 갈피 작성하기
+  }
 
   onMounted(() => {
     feedStore.fetchGalfies(book.value.id)
@@ -96,10 +108,22 @@
 
       <div class="info library-info fadeinright80" :ref="collect">
         <h3 class="title">독서 상태</h3>
-        <p v-if="libraryBook.rating !== null && libraryBook.rating !== undefined"><span class="cate">평점</span> {{ libraryBook.rating }}</p>
+        <p>
+          <span class="cate">평점</span> 
+          <ul class="rating">
+            <li v-for="n in 5" :key="n">
+              <!-- 조건부 렌더링: rating 값에 따라 채워진 별/빈 별을 표시 -->
+              <span :class="n <= libraryBook.rating ? 'filled' : 'empty'">★</span>
+            </li>
+          </ul>
+        </p>
         <p v-if="libraryBook.start_date"><span class="cate">독서 날짜</span> {{ libraryBook.start_date }} ~ <span v-if="libraryBook.finish_date">{{ libraryBook.finish_date }}</span></p>
         <p v-if="libraryBook.current_page"><span class="cate">독서량</span> {{ libraryBook.current_page }} / {{ book.page }} 페이지</p>
-        <p><span class="cate">리뷰</span> </p>
+        <p>
+          <span class="cate">리뷰</span> 
+          <template v-if="book.reviews.length === 0">작성 전 <button @click="createReview" class="btn-review">리뷰 작성하기 ></button></template>
+          <template v-else>작성 완료 <button @click="goReview" class="btn-review">리뷰 보러가기 ></button></template>
+        </p>
       </div>
       <span v-if="statusLabel" class="status-label fadeinup" :ref="collect">{{ statusLabel }}</span>
 
@@ -211,6 +235,48 @@
     position: relative;
   }
 
+  .rating {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: start;
+  }
+
+  .rating li {
+    margin-right: 2px;
+    font-size: 20px;
+  }
+
+  .filled {
+    color: gold; /* 채워진 별 색상 */
+  }
+
+  .empty {
+    color: lightgray; /* 빈 별 색상 */
+  }
+
+  .btn-review {
+    display: inline-block;
+    margin-left: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    color: #555;
+    font-size: 15px;
+    padding: 5px 8px;
+    font-family: 'Pretendard', sans-serif;
+    margin-top: -3px;
+    cursor: pointer;
+    transition: all ease .2s;
+  }
+
+  .btn-review:hover {
+    border-color: #456AFF;
+    color: #456AFF;
+    background-color: #EBEFFF   ;
+  }
+
   .status-label {
     position: absolute;
     display: block;
@@ -222,6 +288,18 @@
     color: #fff;
     border-radius: 999px;
   }
+
+  /* .status-label.reading {
+    background-color: #8651b5;
+  }
+
+  .status-label.want {
+    background-color: #ca6725;
+  }
+
+  .status-label.finished {
+    background-color: #31aa4f;
+  } */
 
   .post-list-div {
     padding: 50px 30px 0;

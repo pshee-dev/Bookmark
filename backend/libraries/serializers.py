@@ -28,7 +28,7 @@ class LibraryBookBaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'current_page', 'rating')
+        fields = ('id', 'status', 'start_date', 'finish_date', 'current_page', 'rating')
 
     # 유효성 검증 로직
     def validate(self, data):
@@ -104,7 +104,7 @@ class LibraryBookListSerializer(serializers.ModelSerializer):
     book = BookBaseSerializer(read_only=True)
     class Meta:
         model = Library
-        fields = ('id','status', 'start_date', 'finish_date', 'rating', 'book')
+        fields = ('id', 'status', 'start_date', 'finish_date', 'rating', 'book')
     
     # Todo: 페이지네이션
 

@@ -132,7 +132,7 @@ export const useLibraryStore = defineStore('library', () => {
           },
         }
       )
-      libraryBook.value = res.data
+      await fetchLibraryDetail(res.data.id)
       router.push({ name: 'library', params: { username: user.value.username, libraryId: res.data.id } })
     } catch (err) {
       errorStore.handleRequestError(err)
