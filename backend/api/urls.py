@@ -21,6 +21,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 import debug_toolbar
+from drf_spectacular.views import ( # Swagger가 제공하는 뷰들
+    SpectacularAPIView,        # OpenAPI JSON 스키마
+    SpectacularSwaggerView,    # Swagger UI
+    SpectacularRedocView,      # Redoc UI (선택)
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),    
@@ -32,6 +37,13 @@ urlpatterns = [
     path('api/v1/reviews/', include('reviews.urls')),
     path('api/v1/galfies/', include('galfies.urls')),
     path('api/v1/comments/', include('comments.urls')),
+    path('api/v1/likes/', include('likes.urls')),
+    # schema (Swagger UI가 이 endpoint를 읽어서 문서를 그림)
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # swagger UI (브라우저에서 사람이 보는 문서 화면)
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # redoc UI (브라우저에서 사람이 보는 문서 화면)
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

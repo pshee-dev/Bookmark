@@ -3,11 +3,33 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
+
+from books.serializers import BookSerializer, BookWithReviewAndGalfiesSerializer
+from reviews.models import Review
 from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
 from common.utils.paginations import apply_queryset_pagination
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
 
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(name='status', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='sort-type', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='limit', type=int, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='offset', type=int, location=OpenApiParameter.QUERY),
+    ],
+    responses=LibraryBookListSerializer(many=True),
+    tags=['libraries'],
+)
+@extend_schema(
+    methods=['POST'],
+    request=LibraryBookCreateSerializer,
+    responses=LibraryBookDetailSerializer,
+    tags=['libraries'],
+)
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def library_book_list(request):
@@ -15,10 +37,10 @@ def library_book_list(request):
     if request.method == 'GET':
         # [status] status 파라미터에 의해 상태 필터링
         reading_status = request.query_params.get('status', Library.StatusEnum.reading.value)
-        if reading_status not in Library.StatusEnum.values: 
+        if reading_status not in Library.StatusEnum.values:
             reading_status = Library.StatusEnum.reading.value
         libraries = Library.objects.filter(user=request.user, status=reading_status)
-        
+        print(libraries.count())
         # [sort] 정렬 관련 파라미터에 의해 쿼리셋 정렬
         '''
         request 값을 그대로 order_by에 사용할 경우 SQL Injection 공격에 취약함
@@ -49,10 +71,27 @@ def library_book_list(request):
     elif request.method == 'POST':
         serializer = LibraryBookCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            new_library_book = serializer.save(user=request.user)
+            return Response(LibraryBookDetailSerializer(new_library_book).data, status=status.HTTP_201_CREATED)
         
 
+@extend_schema(
+    methods=['GET'],
+    parameters=[OpenApiParameter(name='library_id', type=int, location=OpenApiParameter.PATH)],
+    responses=LibraryBookDetailSerializer,
+    tags=['libraries'],
+)
+@extend_schema(
+    methods=['PATCH'],
+    request=LibraryBookUpdateSerializer,
+    responses=LibraryBookDetailSerializer,
+    tags=['libraries'],
+)
+@extend_schema(
+    methods=['DELETE'],
+    responses=OpenApiResponse(description='No response body.'),
+    tags=['libraries'],
+)
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def library_book(request, library_id):
@@ -61,8 +100,14 @@ def library_book(request, library_id):
 
     # 독서 상태 상세 조회
     if request.method == 'GET':
-        serializer = LibraryBookDetailSerializer(library)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        library_serializer = LibraryBookDetailSerializer(library)
+
+        return Response(
+            {
+                "library": library_serializer.data,
+            },
+            status=status.HTTP_200_OK
+        )
 
     # 독서 상태 수정
     elif request.method == 'PATCH':
