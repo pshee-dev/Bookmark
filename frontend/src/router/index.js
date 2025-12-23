@@ -36,9 +36,13 @@ const router = createRouter({
     // 서재 라우터
     {
       path: '/libraries/:username',
-      name: 'libraries',
-      component: () => import('@/views/library/LibraryListView.vue'),
+      component: () => import('@/views/library/LibraryView.vue'),
       meta: { requiresAuth: true, ownerOnly: true },
+      children: [
+        { path: 'reading', name: 'reading', component: () => import('@/components/library/LibraryList.vue'), meta: { status: 'reading' },},
+        { path: 'want', name: 'want', component: () => import('@/components/library/LibraryList.vue'), meta: { status: 'want' },},
+        { path: 'finished', name: 'finished', component: () => import('@/components/library/LibraryList.vue'), meta: { status: 'finished' },},
+      ],
     },
     {
       path: '/libraries/:username/:libraryId',

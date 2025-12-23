@@ -86,7 +86,7 @@
 
       <!-- 메뉴 -->
       <div v-if="isLogin && user" class="menu-list">
-        <RouterLink :to="{name: 'libraries', params: {username: user.username}}">서재</RouterLink>
+        <RouterLink :to="{name: 'reading', params: {username: user.username}}">서재</RouterLink>
         <RouterLink :to="{name: 'feed'}">피드</RouterLink>
         <RouterLink :to="{name: 'user', params: {username: user.username}}">마이페이지</RouterLink>
       </div>

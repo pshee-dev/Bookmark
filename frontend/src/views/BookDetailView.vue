@@ -3,12 +3,17 @@
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useBookStore } from '@/stores/books'
+  import { useLibraryStore } from '@/stores/libraries'
 
   const route = useRoute()
   const bookId = computed(() => route.params.bookId)
 
   const bookStore = useBookStore()
   const { bookDetail } = storeToRefs(bookStore)
+
+  const openLibraryModal = () => {
+    
+  }
 
   onMounted(() => {
     // URL 직접 접근 대비
@@ -44,7 +49,7 @@
           <p v-if="bookDetail.isbn"><span class="cate">ISBN</span> {{ bookDetail.isbn }}</p>
         </div>
       </div>
-      <button class="btn">서재에 담기</button>
+      <button class="btn" @click.stop="openLibraryModal">서재에 담기</button>
     </section>
 
     <!-- 도서 갈피/리뷰 리스트 section -->
