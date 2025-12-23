@@ -201,7 +201,7 @@ def parse_google_books_data(data_list):
         authors = ', '.join(authors)
         publisher = volume_info.get("publisher") or ""
         published_date = volume_info.get("publishedDate") or ""
-        book_page = volume_info.get("pageCount") or -1 # 결측치 임시 처리
+        book_page = volume_info.get("pageCount") or None # 결측치는 None으로 들어가야 서재에 책 등록 시 유효성 검사에서 문제가 발생하지 않음
 
         all_book_isbns = volume_info.get("industryIdentifiers") or {}
         isbn_13 = None
