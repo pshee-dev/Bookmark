@@ -41,11 +41,13 @@ INSTALLED_APPS = [
     'reviews',
     'galfies',
     'comments',
+    'likes',
     'corsheaders', # CORS header 관련 설정
     'django_extensions', # 장고 확장 기능 제공하는 툴
     'rest_framework', 
     'rest_framework.authtoken', # dj-rest-auth 관련 설정 - start
     'dj_rest_auth',
+    'drf_spectacular', # Swagger(OpenAPI) 스펙 자동 생성을 위한 앱
     'django.contrib.sites',
     'allauth',
     'allauth.account',
@@ -185,6 +187,19 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny', # 전역 권한은 모든 사용자 접근 허용(AllowAny)
     ],
+    # DRF가 기본으로 사용할 Schema Generator 지정
+    # Swagger(OpenAPI) 문서를 생성하는 엔진을 drf-spectacular로 바꿈
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# swagger 설정
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Bookmark API',
+    'DESCRIPTION': '독서 리뷰 및 갈피 서비스 API 문서',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False, # Swagger UI에서 인증 버튼 활성화
+    'COMPONENT_SPLIT_REQUEST': True,  # request/response 예시를 Swagger에 표시
+    'DISABLE_ERRORS_AND_WARNINGS': False, # 경로 충돌 시 경고를 무시하지 않도록 함.
 }
 
 # CORS 경로 설정 (리소스에 접근을 허용할 출처 URL)
