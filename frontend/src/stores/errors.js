@@ -9,6 +9,29 @@ export const useErrorStore = defineStore('error', () => {
   const errorMessage = ref('') // 에러 메시지
   const errorStatus = ref('') // 현재 에러 상태
 
+  // 공통 에러 핸들러
+  const handleRequestError = (err) => {
+    const data = err.response?.data ?? null
+    const message = ref('요청을 처리하지 못했습니다.')
+
+    if (data?.error) {
+      message.value = data.error.message
+      errorStatus.value = data.error.code
+    } else if (data && typeof data === 'object') {
+      const entries = Object.entries(data)
+      const [key, value] = entries[0] ?? []
+      errorStatus.value = key
+
+      if (Array.isArray(value)) {
+        message.value = value[0]   // 첫 번째 에러 메시지
+      } else if (value) {
+        message.value = value
+      }
+    }
+    openErrorModal(message.value)
+    console.error(err)
+  }
+
   // 에러 모달 열기
   const openErrorModal = (message) => {
     isErrorModalOpen.value = true
@@ -33,5 +56,6 @@ export const useErrorStore = defineStore('error', () => {
     errorStatus,
     openErrorModal,
     closeErrorModal,
+    handleRequestError,
   }
 })
