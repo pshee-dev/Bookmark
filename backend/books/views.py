@@ -168,6 +168,7 @@ def resolve_by_isbn(request):
     """
 
     raw_isbn = request.data.get("isbn")
+
     isbn = raw_isbn.strip() if raw_isbn else ""
 
     # ISBN 유효성 검사
@@ -183,6 +184,7 @@ def resolve_by_isbn(request):
         )
 
     # ISBN으로 기존 도서 존재 여부 확인
+
     book = Book.objects.filter(isbn=isbn)
 
     # 이미 존재하는 경우 → 생성하지 않고 ID 반환
