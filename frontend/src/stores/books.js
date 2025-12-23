@@ -8,7 +8,6 @@ export const useBookStore = defineStore('book', () => {
   const router = useRouter()
   
   const errorStore = useErrorStore()
-  const { errorStatus } = storeToRefs(errorStore)
   const API_URL = import.meta.env.VITE_API_URL
 
   const searchType = ref('title')
@@ -65,11 +64,7 @@ export const useBookStore = defineStore('book', () => {
 
       searchBookList.value.push(...results)
     } catch (err) {
-      if (err.response && err.response.status === 400) {
-        errorStatus.value = err.response.data.error.code
-        errorStore.openErrorModal(err.response.data.error.message)
-      }
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
@@ -91,12 +86,7 @@ export const useBookStore = defineStore('book', () => {
       router.push({name: 'bookGalfyList', params: {bookId: bookId}})
 
     } catch (err) {
-      if (err.response && err.response.status === 400) {
-        // errorStatus.value = err.response.data.error.code
-        // errorStore.openErrorModal(err.response.data.error.message)
-        console.error(err)
-      }
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
@@ -118,13 +108,7 @@ export const useBookStore = defineStore('book', () => {
       )
       bookDetail.value = res.data
     } catch (err) {
-      if (err.response) {
-        errorStatus.value = err.response.data?.error?.code || 'unknown_error'
-        errorStore.openErrorModal(
-          err.response.data?.error?.message || '도서 정보를 불러오지 못했습니다.'
-        )
-      }
-      console.error('fetchBookDetail error:', err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }

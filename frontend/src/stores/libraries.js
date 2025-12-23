@@ -138,7 +138,7 @@ export const useLibraryStore = defineStore('library', () => {
       }
       closeLibraryModal()
     } catch (err) {
-      console.error(err)
+      errorStore.handleRequestError(err)
     }
   }
 

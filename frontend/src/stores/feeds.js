@@ -34,7 +34,7 @@ export const useFeedStore = defineStore('feed', () => {
       galfyList.value = res.data.results
       galfyCount.value = res.data.count
     } catch (err) {
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
@@ -55,7 +55,7 @@ export const useFeedStore = defineStore('feed', () => {
       reviewList.value = res.data.results
       reviewCount.value = res.data.count
     } catch (err) {
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
