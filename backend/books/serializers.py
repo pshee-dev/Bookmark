@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from .models import Book, Category
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -8,13 +7,20 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
         read_only_fields = ["id"]
 
-class BookSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
+class BookBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = [
-            "id", "title", "author", "thumbnail", "category", "publisher", "published_date", "page", "isbn",
-        ]
+        fields = ("id", "title")
+        read_only_fields = ["id"]
+
+class BookSerializer(BookBaseSerializer):
+    category = CategorySerializer(read_only=True)
+    class Meta(BookBaseSerializer.Meta):
+        fields =  (
+                BookBaseSerializer.Meta.fields
+                   + ("author", "publisher","thumbnail", "category", "published_date", "page", "isbn",)
+        )
+
         read_only_fields = ["id"]
 
 class ISBNResolveSerializer(serializers.Serializer):
@@ -28,6 +34,43 @@ class ISBNResolveSerializer(serializers.Serializer):
     )
 
 
+class BookSimpleSerializer(BookBaseSerializer):
+    category = CategorySerializer(read_only=True)
+    class Meta(BookBaseSerializer.Meta):
+        fields =  (
+            BookBaseSerializer.Meta.fields
+             + ("author", "publisher","thumbnail", "category", "isbn", )
+        )
+
+
+class BookWithReviewAndGalfiesSerializer(BookBaseSerializer):
+    category = CategorySerializer(read_only=True)
+    class Meta(BookBaseSerializer.Meta):
+        pass
+
+    galfies = serializers.SerializerMethodField()
+    reviews = serializers.SerializerMethodField()
+
+    def get_galfies(self, obj):
+        from galfies.serializers import GalfySerializer
+        return GalfySerializer(obj.galfies.all(), many=True).data
+
+    def get_reviews(self, obj):
+        from reviews.serializers import ReviewSerializer
+        return ReviewSerializer(obj.reviews.all(), many=True).data
+
+    class Meta(BookBaseSerializer.Meta):
+        fields = (
+                BookBaseSerializer.Meta.fields
+                + ("author", "publisher", "thumbnail", "category",
+                   "published_date", "page", "isbn",
+                   "galfies", "reviews")
+        )
+class BookWithReviewAndGalfiesSerializerInLibrary(BookWithReviewAndGalfiesSerializer):
+    class Meta(BookWithReviewAndGalfiesSerializer.Meta):
+        pass
+
+
 class BookListSerializer(serializers.Serializer):
     keyword = serializers.CharField()  # 검색어
     field = serializers.CharField()  # 검색 필드 (예: title, author)
@@ -38,10 +81,11 @@ class BookListSerializer(serializers.Serializer):
     class Meta:
         fields = ["keyword", "field", "current_page", "page_size", "results"]
 
-class BookSummarySerializer(serializers.ModelSerializer):
+class BookSummarySerializer(BookBaseSerializer):
     category = CategorySerializer(read_only=True)
-    class Meta:
-        model = Book
-        fields = [
-            "id", "title", "author", "thumbnail", "category"]
+    class Meta(BookBaseSerializer.Meta):
+        fields = (
+                BookBaseSerializer.Meta.fields
+                + ("author", "publisher", "thumbnail", "category")
+        )
         read_only_fields = ["id"]

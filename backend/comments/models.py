@@ -5,7 +5,7 @@ from galfies.models import Galfy
 from reviews.models import Review
 from .errors import ValidationError
 
-
+# TODO 공통 enum으로 리팩토링
 class TargetType(models.TextChoices):
     REVIEW = 'REVIEW', '리뷰 댓글'
     GALFY = 'GALFY', '갈피 댓글'
