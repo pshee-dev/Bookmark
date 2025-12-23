@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/v1/reviews/', include('reviews.urls')),
     path('api/v1/galfies/', include('galfies.urls')),
     path('api/v1/comments/', include('comments.urls')),
+    path('api/v1/likes/', include('likes.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

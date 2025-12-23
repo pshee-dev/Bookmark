@@ -39,8 +39,7 @@ def list_and_create(request, book_id):
         'created_at': 'created_at',
     }
 
-    # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
-    sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
+    sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity')
     # TODO 페이지 사이즈 쿼리 추가
     # TODO likes 모델 생성한 후 인기도순 로직 점검
     ''' 

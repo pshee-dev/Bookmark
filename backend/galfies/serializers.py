@@ -1,14 +1,21 @@
 from rest_framework import serializers
 
 from books.serializers import BookSimpleSerializer
+from comments.models import TargetType
 from .models import Galfy
 from accounts.accounts_serializers.serializers import UserProfileSerializer
 
+# TODO 공통 enum으로 리팩토링
+TARGET_TYPE_MAP = {
+    "galfy":TargetType.GALFY.value,
+}
 
 class GalfySerializer(serializers.ModelSerializer):
     book = BookSimpleSerializer(read_only=True)
     user = UserProfileSerializer(read_only=True)
     comments_count = serializers.IntegerField(source="comments.count", read_only=True)
+    likes_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Galfy
         fields = [
@@ -20,9 +27,13 @@ class GalfySerializer(serializers.ModelSerializer):
             'user',
             'book',
             'comments_count',
-            # TODO 좋아요 개수 추가
+            'likes_count',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'book']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'book', 'likes_count']
+
+    def get_likes_count(self, obj):
+        from likes.models import Like
+        return Like.objects.filter(target_type=TARGET_TYPE_MAP.get("galfy"), target_id=obj.id).count()
 
 class GalfyCreateSerializer(serializers.ModelSerializer):
     class Meta:
