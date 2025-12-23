@@ -9,7 +9,7 @@ from django.utils import timezone
 class BookBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ('title', 'author', 'publisher')
+        fields = ('title', 'author', 'publisher', 'thumbnail')
 
 
 # 독서 상태 등록/수정 시 유효성 검증 및 자동화 로직을 위한 기본 시리얼라이저

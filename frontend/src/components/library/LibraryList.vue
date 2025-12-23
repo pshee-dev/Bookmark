@@ -19,11 +19,11 @@
 <template>
   <ul class="book-list">
     <li
-      v-for="book in libraryBookList"
-      :key="book.id"
+      v-for="item in libraryBookList"
+      :key="item.id"
       class="book"
     >
-      <LibraryBook :book="book" />
+      <LibraryBook :item="item" />
     </li>
   </ul>
 </template>
@@ -34,6 +34,8 @@
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: flex-start;
+    margin-top: 80px;
+    padding: 0 20px;
     gap: 100px 0;
   }
 
