@@ -12,7 +12,11 @@ export const useAccountStore = defineStore('account', () => {
   const token = ref(null)
   const user = ref(null) // 로그인 시 유저 정보 캐싱
   
-  const signupErrors = ref({})  
+  const signupErrors = ref({
+    username: [],
+    password1: [],
+    password2: [],
+  })  
 
   // 회원가입
   const signup = function (formData) {
@@ -31,10 +35,10 @@ export const useAccountStore = defineStore('account', () => {
         login({ username, password })
       })
       .catch(err => {
-        if (err.response && err.response.status === 400) {
-          signupErrors.value = err.response.data
-        } else {
+        if (err.response.data?.non_field_errors) {
           errorStore.handleRequestError(err)
+        } else {
+          signupErrors.value = err.response.data
         }
       })
   }
