@@ -13,13 +13,6 @@
     bookStore.goDetail(props.book.isbn)
   }
 
-  // onBeforeRouteLeave((to, from) => {
-  //   // 검색어 초기화
-  //   if (to.name !== 'search') {
-  //     bookStore.resetSearch()
-  //   }
-  // })
-
 </script>
 
 <template>
