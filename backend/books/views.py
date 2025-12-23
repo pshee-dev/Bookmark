@@ -101,8 +101,18 @@ def search(request):
 
 @extend_schema(
     tags=["Books"],
-    summary="도서 상세 조회",
-    description="DB에 저장된 도서의 상세 정보를 조회합니다.",
+    summary="Book detail",
+    description="Retrieve book detail by id.",
+    parameters=[
+        OpenApiParameter(
+            name="book_id",
+            description="Book id",
+            required=True,
+            type=int,
+            location=OpenApiParameter.PATH,
+        ),
+    ],
+    responses={200: BookSerializer},
 )
 @api_view(['GET'])
 def detail(request, book_id):

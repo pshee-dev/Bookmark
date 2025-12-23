@@ -11,8 +11,27 @@ from .models import Galfy
 from .serializers import GalfyCreateSerializer, GalfySerializer, GalfyUpdateSerializer
 from django.db.models import Count, OuterRef, Subquery, IntegerField, Value
 from django.db.models.functions import Coalesce
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(name='book_id', type=int, location=OpenApiParameter.PATH),
+        OpenApiParameter(name='sort-field', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='page', type=int, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='page_size', type=int, location=OpenApiParameter.QUERY),
+    ],
+    responses=GalfySerializer(many=True),
+    tags=['galfies'],
+)
+@extend_schema(
+    methods=['POST'],
+    request=GalfyCreateSerializer,
+    responses=GalfySerializer,
+    tags=['galfies'],
+)
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def list_and_create(request, book_id):
@@ -65,6 +84,23 @@ def list_and_create(request, book_id):
         return response
 
 
+@extend_schema(
+    methods=['GET'],
+    parameters=[OpenApiParameter(name='galfy_id', type=int, location=OpenApiParameter.PATH)],
+    responses=GalfySerializer,
+    tags=['galfies'],
+)
+@extend_schema(
+    methods=['PATCH'],
+    request=GalfyUpdateSerializer,
+    responses=GalfySerializer,
+    tags=['galfies'],
+)
+@extend_schema(
+    methods=['DELETE'],
+    responses=OpenApiResponse(description='No response body.'),
+    tags=['galfies'],
+)
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def detail_and_update_and_delete(request, galfy_id):

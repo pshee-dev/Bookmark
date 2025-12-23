@@ -41,13 +41,14 @@ User = get_user_model()
     - 팔로워 수 / 팔로잉 수 포함
     - 로그인 필수
     """,
+    parameters=[OpenApiParameter("user_id", int, location=OpenApiParameter.PATH)],
     responses={
         200: UserProfileSerializer,
         404: OpenApiResponse(description="유저가 존재하지 않음"),
     }
 )
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def profile(request, user_id):
     user_with_counts = User.objects.annotate(
         followings_count=Count('followings', distinct=True),
@@ -67,14 +68,15 @@ def profile(request, user_id):
     - 팔로우 중이 아니면 → 팔로우 (200)
     - 자기 자신은 팔로우 불가
     """,
+    parameters=[OpenApiParameter("user_id", int, location=OpenApiParameter.PATH)],
     responses={
         200: OpenApiResponse(description="팔로우 성공"),
         204: OpenApiResponse(description="언팔로우 성공"),
         404: OpenApiResponse(description="유저가 존재하지 않음"),
     }
 )
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@api_view(['POST'])
 def follow(request, user_id):
     me = request.user
     member = get_object_or_404(User, id=user_id)
@@ -90,10 +92,11 @@ def follow(request, user_id):
 @extend_schema(
     tags=["Accounts"],
     summary="팔로잉 목록 조회",
+    parameters=[OpenApiParameter("user_id", int, location=OpenApiParameter.PATH)],
     responses={200: FollowListSerializer(many=True)}
 )
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def get_following_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     followings = get_list_or_404(member.followings.all())
@@ -104,10 +107,11 @@ def get_following_list(request, user_id):
 @extend_schema(
     tags=["Accounts"],
     summary="팔로워 목록 조회",
+    parameters=[OpenApiParameter("user_id", int, location=OpenApiParameter.PATH)],
     responses={200: FollowListSerializer(many=True)}
 )
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def get_follower_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     followers = get_list_or_404(member.followers.all())
@@ -118,13 +122,16 @@ def get_follower_list(request, user_id):
     tags=["Accounts"],
     summary="유저 리뷰 목록 조회",
     parameters=[
+        OpenApiParameter("user_id", int, location=OpenApiParameter.PATH),
+        OpenApiParameter("page", int, description="page number"),
+        OpenApiParameter("page_size", int, description="page size override"),
         OpenApiParameter("sort-field", str, description="정렬 기준 (created_at)"),
         OpenApiParameter("sort-direction", str, description="정렬 방향 (asc | desc)"),
     ],
     responses={200: ReviewSerializer(many=True)}
 )
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def get_review_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     reviews = member.reviews.all()
@@ -142,13 +149,16 @@ def get_review_list(request, user_id):
     tags=["Accounts"],
     summary="유저 갈피 목록 조회",
     parameters=[
+        OpenApiParameter("user_id", int, location=OpenApiParameter.PATH),
+        OpenApiParameter("page", int, description="page number"),
+        OpenApiParameter("page_size", int, description="page size override"),
         OpenApiParameter("sort-field", str, description="정렬 기준 (created_at)"),
         OpenApiParameter("sort-direction", str, description="정렬 방향 (asc | desc)"),
     ],
     responses={200: GalfySerializer(many=True)}
 )
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def get_galfy_list(request, user_id):
     member = get_object_or_404(User, id=user_id)
     galfies = member.galfies.all()
@@ -167,9 +177,14 @@ def get_galfy_list(request, user_id):
     description="""
     유저의 리뷰 / 갈피 / 댓글을 시간순으로 통합하여 반환합니다.
     """,
+    parameters=[
+        OpenApiParameter("user_id", int, location=OpenApiParameter.PATH),
+        OpenApiParameter("page", int, description="page number"),
+        OpenApiParameter("page_size", int, description="page size override"),
+    ],
 )
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def get_feed(request, user_id):
     member = get_object_or_404(User, id=user_id)
 

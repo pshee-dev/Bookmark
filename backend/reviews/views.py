@@ -11,10 +11,29 @@ from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 from django.db.models import Count, OuterRef, Subquery, IntegerField, Value
 from django.db.models.functions import Coalesce
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
-@api_view(['GET', 'POST'])
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(name='book_id', type=int, location=OpenApiParameter.PATH),
+        OpenApiParameter(name='sort-field', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='page', type=int, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='page_size', type=int, location=OpenApiParameter.QUERY),
+    ],
+    responses=ReviewSerializer(many=True),
+    tags=['Reviews'],
+)
+@extend_schema(
+    methods=['POST'],
+    request=ReviewCreateSerializer,
+    responses=ReviewSerializer,
+    tags=['Reviews'],
+)
 @permission_classes([IsAuthenticatedOrReadOnly])
+@api_view(['GET', 'POST'])
 def list_and_create(request, book_id):
     if request.method == 'POST':
         book = get_object_or_404(Book, pk=book_id)
@@ -64,8 +83,25 @@ def list_and_create(request, book_id):
     return response
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
+@extend_schema(
+    methods=['GET'],
+    parameters=[OpenApiParameter(name='review_id', type=int, location=OpenApiParameter.PATH)],
+    responses=ReviewSerializer,
+    tags=['Reviews'],
+)
+@extend_schema(
+    methods=['PATCH'],
+    request=ReviewUpdateSerializer,
+    responses=ReviewSerializer,
+    tags=['Reviews'],
+)
+@extend_schema(
+    methods=['DELETE'],
+    responses=OpenApiResponse(description='No response body.'),
+    tags=['Reviews'],
+)
 @permission_classes([IsAuthenticatedOrReadOnly])
+@api_view(['GET', 'PATCH', 'DELETE'])
 def detail_and_update_and_delete(request, review_id):
     review = get_object_or_404(Review, id=review_id)
 

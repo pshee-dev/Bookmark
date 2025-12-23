@@ -9,8 +9,27 @@ from reviews.models import Review
 from .serializers import LibraryBookListSerializer, LibraryBookCreateSerializer, LibraryBookUpdateSerializer, LibraryBookDetailSerializer
 from .models import Library
 from common.utils.paginations import apply_queryset_pagination
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
 
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(name='status', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='sort-type', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='limit', type=int, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='offset', type=int, location=OpenApiParameter.QUERY),
+    ],
+    responses=LibraryBookListSerializer(many=True),
+    tags=['libraries'],
+)
+@extend_schema(
+    methods=['POST'],
+    request=LibraryBookCreateSerializer,
+    responses=LibraryBookDetailSerializer,
+    tags=['libraries'],
+)
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def library_book_list(request):
@@ -56,6 +75,23 @@ def library_book_list(request):
             return Response(LibraryBookDetailSerializer(new_library_book).data, status=status.HTTP_201_CREATED)
         
 
+@extend_schema(
+    methods=['GET'],
+    parameters=[OpenApiParameter(name='library_id', type=int, location=OpenApiParameter.PATH)],
+    responses=LibraryBookDetailSerializer,
+    tags=['libraries'],
+)
+@extend_schema(
+    methods=['PATCH'],
+    request=LibraryBookUpdateSerializer,
+    responses=LibraryBookDetailSerializer,
+    tags=['libraries'],
+)
+@extend_schema(
+    methods=['DELETE'],
+    responses=OpenApiResponse(description='No response body.'),
+    tags=['libraries'],
+)
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def library_book(request, library_id):

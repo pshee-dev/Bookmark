@@ -7,12 +7,34 @@ from rest_framework.status import HTTP_200_OK
 from comments.models import TargetType
 from likes.errors import InvalidTarget, InvalidTargetType
 from likes.models import Like
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
 
 TARGET_TYPE_MAP = {
     "galfy":TargetType.GALFY.value,
     "review":TargetType.REVIEW.value,
 }
 
+@extend_schema(
+    methods=['POST'],
+    request=inline_serializer(
+        name='LikeToggleRequest',
+        fields={
+            'target_type': serializers.CharField(),
+            'target_id': serializers.IntegerField(),
+        },
+    ),
+    responses=inline_serializer(
+        name='LikeToggleResponse',
+        fields={
+            'target_type': serializers.CharField(),
+            'target_id': serializers.IntegerField(),
+            'is_liked': serializers.BooleanField(),
+            'like_count': serializers.IntegerField(),
+        },
+    ),
+    tags=['likes'],
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def like_toggle(request):
