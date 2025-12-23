@@ -132,14 +132,8 @@ export const useLibraryStore = defineStore('library', () => {
   const submitLibrary = async (formValue) => {
     try {
       if (libraryMode.value === 'update') {
-        if (!modalLibraryId.value) {
-          throw new Error('libraryId? ????.')
-        }
         await updateLibrary(modalLibraryId.value, modalBookId.value, formValue)
       } else {
-        if (!modalBookId.value) {
-          throw new Error('bookId? ????.')
-        }
         await createLibrary(modalBookId.value, formValue)
       }
       closeLibraryModal()
