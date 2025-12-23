@@ -134,7 +134,7 @@ class LibraryBookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Library
-        fields = ('id', 'user', 'book', 'status', 'start_date', 'finish_date', 'rating', )
+        fields = ('id', 'user', 'book', 'status', 'start_date', 'finish_date', 'rating', 'current_page' )
 
 # [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}
 class LibraryBookUpdateSerializer(LibraryBookBaseSerializer):
