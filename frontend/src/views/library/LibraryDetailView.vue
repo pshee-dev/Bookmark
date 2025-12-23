@@ -6,6 +6,8 @@
   import { useLibraryStore } from '@/stores/libraries'
   import FeedBase from '@/components/feed/FeedBase.vue'
   import LibraryModal from '@/components/library/LibraryModal.vue'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+  const { collect } = useScrollReveal()
 
   const route = useRoute()
   const router = useRouter()
@@ -77,12 +79,12 @@
     </div>
     <section class="container-box book-detail">
       <div class="book-info">
-        <div class="thumbnail">
+        <div class="thumbnail fadein" :ref="collect">
           <img v-if="book.thumbnail" :src="book.thumbnail" :alt="book.title">
           <img v-else src="@/assets/images/no_img_bookcover.jpg" alt="no-image">
         </div>
 
-        <div class="info">
+        <div class="info fadeinright80" :ref="collect">
           <h3 class="title">도서 정보</h3>
           <p v-if="book.category?.name"><span class="cate">분야</span> {{ book.category?.name }}</p>
           <p v-if="book.author"><span class="cate">작가</span> {{ book.author }}</p>
@@ -92,14 +94,14 @@
         </div>
       </div>
 
-      <div class="info library-info">
+      <div class="info library-info fadeinright80" :ref="collect">
         <h3 class="title">독서 상태</h3>
         <p v-if="libraryBook.rating !== null && libraryBook.rating !== undefined"><span class="cate">평점</span> {{ libraryBook.rating }}</p>
         <p v-if="libraryBook.start_date"><span class="cate">독서 날짜</span> {{ libraryBook.start_date }} ~ <span v-if="libraryBook.finish_date">{{ libraryBook.finish_date }}</span></p>
         <p v-if="libraryBook.current_page"><span class="cate">독서량</span> {{ libraryBook.current_page }} / {{ book.page }} 페이지</p>
         <p><span class="cate">리뷰</span> </p>
-        <span v-if="statusLabel" class="status-label">{{ statusLabel }}</span>
       </div>
+      <span v-if="statusLabel" class="status-label fadeinup" :ref="collect">{{ statusLabel }}</span>
 
     </section>
 
@@ -147,6 +149,7 @@
   }
 
   .book-detail {
+    position: relative;
     padding: 60px;
     display: flex;
     justify-content: space-between;
@@ -211,8 +214,8 @@
   .status-label {
     position: absolute;
     display: block;
-    top: 26px;
-    right: 0;
+    top: 90px;
+    right: 100px;
     font-size: 18px;
     padding: 10px 20px;
     background-color: #8651b5;
@@ -230,6 +233,14 @@
 
   .count-title strong {
     font-weight: 800;
+  }
+
+  .fadeinright80.show {
+    animation-delay: .2s;
+  }
+
+  .fadeinup.show {
+    animation-delay: .4s;
   }
 </style>
 

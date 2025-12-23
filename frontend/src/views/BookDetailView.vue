@@ -5,6 +5,8 @@
   import { useBookStore } from '@/stores/books'
   import { useLibraryStore } from '@/stores/libraries'
   import LibraryModal from '@/components/library/LibraryModal.vue'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+  const { collect } = useScrollReveal()
 
   const route = useRoute()
   const bookId = computed(() => route.params.bookId)
@@ -39,7 +41,7 @@
     <section class="container-box book-detail">
       <div class="book">
         <!-- 썸네일 -->
-        <div class="thumbnail">
+        <div class="thumbnail fadein" :ref="collect">
           <img
             v-if="bookDetail.thumbnail"
             :src="bookDetail.thumbnail"
@@ -49,7 +51,7 @@
         </div>
 
         <!-- 도서 정보 -->
-        <div class="info">
+        <div class="info fadeinright80" :ref="collect">
           <h3 class="title">도서 정보</h3>
           <p v-if="bookDetail.category?.name"><span class="cate">분야</span> {{ bookDetail.category?.name }}</p>
           <p v-if="bookDetail.author"><span class="cate">작가</span> {{ bookDetail.author }}</p>
@@ -136,5 +138,9 @@
     display: inline-block;
     min-width: 70px;
     font-weight: 600;
+  }
+
+  .fadeinright80.show {
+    animation-delay: .2s;
   }
 </style>

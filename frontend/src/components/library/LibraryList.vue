@@ -4,6 +4,8 @@
   import { storeToRefs } from 'pinia'
   import LibraryBook from '@/components/library/LibraryBook.vue'
   import { useLibraryStore } from '@/stores/libraries'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+  const { collect } = useScrollReveal()
 
   const libraryStore = useLibraryStore()
   const { libraryBookList, hasMore, isLoading } = storeToRefs(libraryStore)
@@ -36,7 +38,8 @@
       <li
         v-for="item in libraryBookList"
         :key="item.id"
-        class="book fadein"
+        class="book fadeinup80"
+        :ref="collect"
       >
         <LibraryBook :item="item" />
       </li>
