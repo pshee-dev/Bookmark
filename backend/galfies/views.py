@@ -9,6 +9,8 @@ from common.utils.paginations import apply_queryset_pagination
 from likes.models import Like
 from .models import Galfy
 from .serializers import GalfyCreateSerializer, GalfySerializer, GalfyUpdateSerializer
+from django.db.models import Count, OuterRef, Subquery, IntegerField, Value
+from django.db.models.functions import Coalesce
 
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
@@ -31,7 +33,7 @@ def list_and_create(request, book_id):
     if request.method == 'GET':
         queryset = Galfy.objects.all()
         sort_direction = request.query_params.get('sort-direction', 'desc')
-        sort_field = request.query_params.get('sort-field', 'created_at')
+        sort_field = request.query_params.get('sort-field', 'popularity')
 
         # 정렬 기준 필드
         SORT_TYPE_MAP = {
@@ -39,21 +41,28 @@ def list_and_create(request, book_id):
             'created_at': 'created_at',
         }
         #TODO 코멘트처럼 파라미터 예외처리 추가
-        # sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') <- TODO 좋아요 구현 후 기본값 이걸로 변경
-        sort_field = SORT_TYPE_MAP.get(sort_field, 'created_at') # <- 테스트용 기본값
-        # TODO 페이지 사이즈 쿼리 추가
+        sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity') # <- 테스트용 기본값
         # TODO likes 모델 생성한 후 인기도순 로직 점검
-        ''' 
+
         if sort_field == 'popularity':
+            like_counts = Like.objects.filter(
+                target_type=Like.TargetType.GALFY,
+                target_id=OuterRef('pk')
+            ).values('target_id').annotate(
+                c=Count('id')
+            ).values('c')
             queryset = queryset.annotate(
-                like_count=Count('likes')
-            ) 
-        '''
+                like_count=Coalesce(Subquery(like_counts, output_field=IntegerField()), Value(0))
+            )
+            sort_field = 'like_count'
+
 
         page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
         serializer = GalfySerializer(page, many=True)
 
-        return paginator.get_paginated_response(serializer.data)
+        response = paginator.get_paginated_response(serializer.data)
+        response.data["page_size"] = len(page)
+        return response
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])

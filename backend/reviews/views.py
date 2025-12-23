@@ -9,6 +9,8 @@ from common.utils.paginations import apply_queryset_pagination
 from likes.models import Like
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
+from django.db.models import Count, OuterRef, Subquery, IntegerField, Value
+from django.db.models.functions import Coalesce
 
 # POST/PUT/PATCH/DELETE는 로그인 필수, GET은 로그인 없이 접근 가능
 @api_view(['GET', 'POST'])
@@ -40,19 +42,26 @@ def list_and_create(request, book_id):
     }
 
     sort_field = SORT_TYPE_MAP.get(sort_field, 'popularity')
-    # TODO 페이지 사이즈 쿼리 추가
-    # TODO likes 모델 생성한 후 인기도순 로직 점검
-    ''' 
+    # TODO 페이지 사이즈 추가
+
     if sort_field == 'popularity':
+        like_counts = Like.objects.filter(
+            target_type=Like.TargetType.REVIEW,
+            target_id=OuterRef('pk')
+        ).values('target_id').annotate(
+            c=Count('id')
+        ).values('c')
         queryset = queryset.annotate(
-            like_count=Count('likes')
-        ) 
-    '''
+            like_count=Coalesce(Subquery(like_counts, output_field=IntegerField()), Value(0))
+        )
+        sort_field = 'like_count'
 
     page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
     serializer = ReviewSerializer(page, many=True)
 
-    return paginator.get_paginated_response(serializer.data)
+    response = paginator.get_paginated_response(serializer.data)
+    response.data["page_size"] = len(page)
+    return response
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
