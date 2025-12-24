@@ -353,6 +353,7 @@
   }
 
 .action-txt {
+  font-family: 'Pretendard', sans-serif;
   font-size: 16px;
   font-weight: 600;
 }
