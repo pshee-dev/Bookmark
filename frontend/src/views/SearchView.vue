@@ -3,10 +3,12 @@
   import { useBookStore } from '@/stores/books'
   import { storeToRefs } from 'pinia'
   import SearchBook from '@/components/SearchBook.vue'
+  import Loading from '@/components/Loading.vue'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+  const { collect } = useScrollReveal()
 
   const bookStore = useBookStore()
   const { searchBookList, searchType, searchKeyword, isLoading } = storeToRefs(bookStore)
-
 
 </script>
 
@@ -18,14 +20,15 @@
         <li
           v-for="book in searchBookList"
           :key="book.id"
-          class="book"
+          class="book fadeinup80"
+          :ref="collect"
         >
           <SearchBook :book="book" />
         </li>
       </ul>
-      <div v-if="isLoading">
-        로딩 중...
-      </div>
+      <p v-if="searchBookList.length === 0 && !isLoading" class="no-content">조회된 검색 결과가 없습니다.</p>
+
+      <Loading v-if="isLoading" />
     </div>
   </div>
 </template>

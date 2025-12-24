@@ -141,7 +141,7 @@ def get_review_list(request, user_id):
     validate_query(sort_field, sort_direction)
 
     page, paginator = apply_queryset_pagination(request, reviews, sort_field, sort_direction)
-    serializer = ReviewSerializer(page, many=True)
+    serializer = ReviewSerializer(page, many=True, context={"request": request})
     return paginator.get_paginated_response(serializer.data)
 
 
@@ -168,7 +168,7 @@ def get_galfy_list(request, user_id):
     validate_query(sort_field, sort_direction)
 
     page, paginator = apply_queryset_pagination(request, galfies, sort_field, sort_direction)
-    serializer = GalfySerializer(page, many=True)
+    serializer = GalfySerializer(page, many=True, context={"request": request})
     return paginator.get_paginated_response(serializer.data)
 
 @extend_schema(

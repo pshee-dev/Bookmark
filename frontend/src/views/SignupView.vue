@@ -54,20 +54,20 @@
 
         <label class="form-label required" for="username">아이디</label>
         <input v-model="username" type="text" class="text-input" id="username" required>
-        <p v-if="signupErrors?.username" class="error-msg">
-          {{ signupErrors.username[0] }}
+        <p v-if="signupErrors?.username" v-for="error in signupErrors.username" :key="error" class="error-msg">
+          · {{ error }}
         </p>
 
         <label class="form-label required" for="password1">비밀번호</label>
         <input v-model="password1" type="password" class="text-input" id="password1" required>
-        <p v-if="signupErrors?.password1" class="error-msg">
-          {{ signupErrors.password1[0] }}
+        <p v-if="signupErrors?.password1" v-for="error in signupErrors.password1" :key="error" class="error-msg">
+          · {{ error }}
         </p>
 
         <label class="form-label required" for="password2">비밀번호 확인</label>
         <input v-model="password2" type="password" class="text-input" id="password2" required>
-        <p v-if="signupErrors?.password2" class="error-msg">
-          {{ signupErrors.password2[0] }}
+        <p v-if="signupErrors?.password2" v-for="error in signupErrors.password2" :key="error" class="error-msg">
+          · {{ error }}
         </p>
 
         <div>

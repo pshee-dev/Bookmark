@@ -1,24 +1,29 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
+import { useErrorStore } from './errors'
 import axios from 'axios'
 
 export const useAccountStore = defineStore('account', () => {
   const router = useRouter()
+  const errorStore = useErrorStore()
 
   const API_URL = import.meta.env.VITE_API_URL
   const token = ref(null)
   const user = ref(null) // 로그인 시 유저 정보 캐싱
   
-  const signupErrors = ref({})
-  
+  const signupErrors = ref({
+    username: [],
+    password1: [],
+    password2: [],
+  })  
 
   // 회원가입
   const signup = function (formData) {
     signupErrors.value = {} // 이전 에러 초기화
     axios({
       method: 'post',
-      url: `${API_URL}/accounts/signup/`,
+      url: `${API_URL}/api/v1/accounts/signup/`,
       data: formData,
     })
       .then(res => {
@@ -30,10 +35,10 @@ export const useAccountStore = defineStore('account', () => {
         login({ username, password })
       })
       .catch(err => {
-        if (err.response && err.response.status === 400) {
-          signupErrors.value = err.response.data
+        if (err.response.data?.non_field_errors) {
+          errorStore.handleRequestError(err)
         } else {
-          console.error(err)
+          signupErrors.value = err.response.data
         }
       })
   }
@@ -43,7 +48,7 @@ export const useAccountStore = defineStore('account', () => {
   const login = function ({ username, password }) {
     axios({
       method: 'post',
-      url: `${API_URL}/accounts/login/`,
+      url: `${API_URL}/api/v1/accounts/login/`,
       data: {
         username, 
         password,
@@ -55,24 +60,25 @@ export const useAccountStore = defineStore('account', () => {
         userInfo(token.value)
         router.push({ name: 'main' })
       })
-      .catch(err => console.log(err))
+      .catch(err => errorStore.handleRequestError(err))
   }
 
   // 유저 정보 캐싱
   const userInfo = function(token) {
     axios({
       method: 'get',
-      url: `${API_URL}/accounts/user/`,
+      url: `${API_URL}/api/v1/accounts/user/`,
       headers: {Authorization: `Token ${token}`}
     })
       .then(res => {
         console.log(res.data)
         user.value = {
+          id: res.data.id,
           username: res.data.username,
           name: res.data.full_name,
         }
       })
-      .catch(err => console.log(err))
+      .catch(err => errorStore.handleRequestError(err))
   }
 
   // 로그인 여부 확인
@@ -84,14 +90,14 @@ export const useAccountStore = defineStore('account', () => {
   const logout = function () {
     axios({
       method: 'post',
-      url: `${API_URL}/accounts/logout/`
+      url: `${API_URL}/api/v1/accounts/logout/`
     })
       .then(res => {
         token.value = null
         user.value = null
         router.push({ name: 'login' })
       })
-      .catch(err => console.log(err))
+      .catch(err => errorStore.handleRequestError(err))
   }
 
   return {

@@ -3,6 +3,10 @@
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useBookStore } from '@/stores/books'
+  import { useLibraryStore } from '@/stores/libraries'
+  import LibraryModal from '@/components/library/LibraryModal.vue'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+  const { collect } = useScrollReveal()
 
   const route = useRoute()
   const bookId = computed(() => route.params.bookId)
@@ -10,13 +14,25 @@
   const bookStore = useBookStore()
   const { bookDetail } = storeToRefs(bookStore)
 
+  const libraryStore = useLibraryStore()
+  const { openLibraryModal } = libraryStore
+
+  const handleOpenLibraryModal = () => {
+    if (!bookDetail.value?.id) return
+    openLibraryModal({
+      mode: 'create',
+      book: bookDetail.value,
+      bookId: bookDetail.value.id,
+    })
+  }
+
   onMounted(() => {
-    // URL 직접 접근 대비
-    if (!bookDetail.value.id || bookDetail.value.id !== Number(bookId.value)) {
+    if (!bookDetail.value.id || bookDetail.value.id != Number(bookId.value)) {
       bookStore.fetchBookDetail(bookId.value)
     }
   })
 </script>
+
 
 <template>
   <div class="bg-container">
@@ -25,7 +41,7 @@
     <section class="container-box book-detail">
       <div class="book">
         <!-- 썸네일 -->
-        <div class="thumbnail">
+        <div class="thumbnail fadein" :ref="collect">
           <img
             v-if="bookDetail.thumbnail"
             :src="bookDetail.thumbnail"
@@ -35,16 +51,18 @@
         </div>
 
         <!-- 도서 정보 -->
-        <div class="info">
+        <div class="info fadeinright80" :ref="collect">
           <h3 class="title">도서 정보</h3>
-          <p v-if="bookDetail.category.name"><span class="cate">분야</span> {{ bookDetail.category.name }}</p>
+          <p v-if="bookDetail.category?.name"><span class="cate">분야</span> {{ bookDetail.category?.name }}</p>
           <p v-if="bookDetail.author"><span class="cate">작가</span> {{ bookDetail.author }}</p>
           <p v-if="bookDetail.publisher"><span class="cate">출판사</span> {{ bookDetail.publisher }}</p>
           <p v-if="bookDetail.published_date"><span class="cate">출판일</span> {{ bookDetail.published_date }}</p>
           <p v-if="bookDetail.isbn"><span class="cate">ISBN</span> {{ bookDetail.isbn }}</p>
         </div>
       </div>
-      <button class="btn">서재에 담기</button>
+      <button class="btn" @click="handleOpenLibraryModal">
+        서재에 담기
+      </button>
     </section>
 
     <!-- 도서 갈피/리뷰 리스트 section -->
@@ -56,6 +74,8 @@
 
       <RouterView />
     </section>
+
+    <LibraryModal />
   </div>
 </template>
 
@@ -108,6 +128,7 @@
   }
 
   .info p {
+    display: flex;
     font-size: 18px;
     margin-top: 12px;
     line-height: 1.2;
@@ -117,5 +138,9 @@
     display: inline-block;
     min-width: 70px;
     font-weight: 600;
+  }
+
+  .fadeinright80.show {
+    animation-delay: .2s;
   }
 </style>
