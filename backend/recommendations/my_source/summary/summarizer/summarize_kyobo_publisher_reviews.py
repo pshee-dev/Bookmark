@@ -146,6 +146,17 @@ def summarize_book_publisher_reviews_with_gpt4o_mini(raw_text: str) -> dict:
 # =========================
 # 실행
 # =========================
+
+# =========================
+# ?? ??
+# =========================
+
+def summarize_kyobo_publisher_reviews(reviews: list[str]) -> dict:
+    if not reviews:
+        return {"summary": "", "sentiment": "", "keywords": ""}
+    bundle_text = make_kyobo_bundle_text(reviews)
+    return summarize_book_publisher_reviews_with_gpt4o_mini(bundle_text)
+
 if __name__ == "__main__":
     df = pd.read_csv(INPUT_CSV)
 

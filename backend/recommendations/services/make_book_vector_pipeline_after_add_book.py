@@ -1,9 +1,8 @@
 import json
 import os
 import threading
-from typing import Optional
+import time
 
-import requests
 from django.conf import settings
 from django.db import close_old_connections
 from langchain_community.vectorstores import Chroma
@@ -12,15 +11,28 @@ from langchain_core.embeddings import Embeddings
 
 from books.models import Book
 from recommendations.models import BookVector
-from recommendations.my_source.aladin_croller.get_reviews_from_aladin import (
+from recommendations.my_source.crollers.aladin_croller.get_reviews_from_aladin import (
     get_aladin_item_id,
     crawl_short_reviews as aladin_crawl_short_reviews,
+)
+from recommendations.my_source.crollers.kyobo_crollers.get_reviews_from_kyobo import (
+    get_kyobo_product_id,
+    crawl_kyobo_reviews_selenium,
+)
+from recommendations.my_source.crollers.kyobo_crollers.get_kyobo_publisher_review import (
+    get_kyobo_product_id as get_kyobo_publisher_product_id,
+    crawl_kyobo_book_descriptions,
 )
 from recommendations.my_source.summary.summarizer.summarize_aladin_short_reviews import (
     summarize_aladin_short_reviews,
 )
+from recommendations.my_source.summary.summarizer.summarize_kyobo_reviews import (
+    summarize_kyobo_reviews,
+)
+from recommendations.my_source.summary.summarizer.summarize_kyobo_publisher_reviews import (
+    summarize_kyobo_publisher_reviews,
+)
 from recommendations.my_source.embeddings import make_embeddings
-from bs4 import BeautifulSoup
 
 
 # Model + vector DB config
@@ -37,8 +49,13 @@ COLLECTION_NAME = "reviews_openai_large"
     # - project/vectordb/openai_large/chroma.sqlite3 <- 메타데이터 + 내부 관리 데이터 DB
     # - project/vectordb/openai_large/index/ <- 실제 벡터 검색을 위한 고속 인덱스 (사람이 읽을 수 있는 데이터가 아님)
     # - 서버를 재시작해도 벡터가 유지(persist)된다.
-VECTOR_DB_ROOT = os.path.join(settings.BASE_DIR, "vectordb")
-VECTOR_DB_DIR = os.path.join(VECTOR_DB_ROOT, "openai_large")
+VECTOR_DB_DIR = os.path.join(
+    settings.BASE_DIR,
+    "recommendations",
+    "vector_db",
+    "openai_large_test",
+    "Book_vector_db",
+)
 
 # GMS OpenAI Gateway
 OPENAI_EMBED_URL = "https://gms.ssafy.io/gmsapi/api.openai.com/v1/embeddings"
@@ -84,47 +101,106 @@ def _build_book_vector(isbn: str) -> None:
     if not isbn: # ISBN 없는 책은 크롤링, 외부 요약 불가하므로 백터 생성 대상에서 제외
         return
 
-    book = Book.objects.filter(isbn=isbn).first()
+    book = None
+    for _ in range(5):
+        book = Book.objects.filter(isbn=isbn).first()
+        if book:
+            break
+        time.sleep(0.5)
+    if not book:
+        return
+
+    print(f"[debug] start isbn={isbn}")
 
     # ================================================================
-    #  2) 알라딘 100자평 크롤링 시작
+    #  2) 크롤링 시작
     # ================================================================
     item_id = get_aladin_item_id(isbn)
-    if not item_id:
-        return
-    crawled_reviews = aladin_crawl_short_reviews(item_id, isbn, max_pages=1)
+    if item_id:
+        aladin_short_reviews = aladin_crawl_short_reviews(item_id, isbn, max_pages=1)
+    else:
+        aladin_short_reviews = []
 
-    #test 크롤링 잘 됐는지 테스트 print(crawled_reviews)
+    kyobo_reviews = []
+    try:
+        product_id = get_kyobo_product_id(isbn)
+        if product_id:
+            kyobo_reviews = crawl_kyobo_reviews_selenium(product_id, isbn)
+    except Exception:
+        kyobo_reviews = []
+
+    kyobo_publisher_reviews = []
+    try:
+        product_id = get_kyobo_publisher_product_id(isbn)
+        if product_id:
+            kyobo_publisher_reviews = crawl_kyobo_book_descriptions(product_id, isbn)
+    except Exception:
+        kyobo_publisher_reviews = []
+
+    print(
+        f"[debug] aladin_count={len(aladin_short_reviews)} "
+        f"kyobo_count={len(kyobo_reviews)} "
+        f"kyobo_pub_count={len(kyobo_publisher_reviews)}"
+    )
 
 
     # ================================================================
-    #  3) 알라딘 100자평 전처리 (요약)
+    #  3) 리뷰 전처리 (요약)
     # ================================================================
 
-    review_texts = [
+    aladin_texts = [
         review["review_text"]
-        for review in crawled_reviews
+        for review in aladin_short_reviews
         if review.get("review_text")
     ]
-    striped_text = _clean_text(" ".join(review_texts))
+    kyobo_texts = [
+        review["review_text"]
+        for review in kyobo_reviews
+        if review.get("review_text")
+    ]
+    kyobo_publisher_texts = [
+        review["review_text"]
+        for review in kyobo_publisher_reviews
+        if review.get("review_text")
+    ]
 
-    summarized_texts = summarize_aladin_short_reviews(review_texts)
+    aladin_summary = summarize_aladin_short_reviews(aladin_texts) if aladin_texts else {}
+    kyobo_summary = summarize_kyobo_reviews(kyobo_texts) if kyobo_texts else {}
+    kyobo_publisher_summary = (
+        summarize_kyobo_publisher_reviews(kyobo_publisher_texts)
+        if kyobo_publisher_texts
+        else {}
+    )
 
-    if not summarized_texts:
-        summary = _fetch_book_summary(isbn) or (_fallback_summary(book) if book else "")
-        return
+    print(
+        f"[debug] aladin_summary_len={len(aladin_summary.get('summary',''))} "
+        f"kyobo_summary_len={len(kyobo_summary.get('summary',''))} "
+        f"kyobo_pub_summary_len={len(kyobo_publisher_summary.get('summary',''))}"
+    )
 
 
     # ================================================================
     #  4) 요약결과 임베딩
     # ================================================================
 
-    emb = make_embeddings(summarized_texts) # GMS OpenAI를 호출하여 텍스트데이터를 임베딩
+    summary_parts = [
+        aladin_summary.get("summary", ""),
+        kyobo_summary.get("summary", ""),
+        kyobo_publisher_summary.get("summary", ""),
+    ]
+    summary_text = _clean_text(" ".join([p for p in summary_parts if p]))
+    if not summary_text:
+        return
+
+    print(f"[debug] final_summary_len={len(summary_text)}")
+
+    emb = make_embeddings(summary_text) # GMS OpenAI를 호출하여 텍스트데이터를 임베딩
     if not emb:
         return
 
-
-
+    # ================================================================
+    #  5) 임베딩 -> 벡터화
+    # ================================================================
 
     # 책당 하나의 벡터 DB
         # - 벡터 DB(Chroma 컬렉션)는 하나지만 그 안에 문서(=벡터)는 여러 개 있을 수 있는 것.
@@ -138,50 +214,20 @@ def _build_book_vector(isbn: str) -> None:
     )
 
     # 파일 기반 벡터 DB에 저장
-    _upsert_chroma(book, summarized_texts, emb)
+    _upsert_chroma(book, summary_text, emb)
 
 
-def _fetch_book_summary(isbn: str) -> str:
-    if not isbn:
-        return ""
-    from books.services import book_search_service
-    try:
-        data = book_search_service.fetch_google_books_api(
-            {"q": f"isbn:{isbn}", "key": book_search_service.GOOGLE_BOOKS_API_KEY}
-        )
-    except Exception:
-        return ""
-
-    items = data.get("items") or []
-    if not items:
-        return ""
-    info = items[0].get("volumeInfo") or {}
-    description = info.get("description") or ""
-    return _clean_text(description)
 
 
-def _croll_aladin_reviews(isbn: str, max_pages: int = 2) -> list[str]:
-    item_id = None#get_aladin_item_id(isbn)#임시
-    if not item_id:
-        return []
-
-    reviews = crawl_short_reviews(item_id, isbn, max_pages=max_pages)
-    return [review["review_text"] for review in reviews if review.get("review_text")]
 
 
-def _fallback_summary(book: Book) -> str:
-    parts = [
-        book.title or "",
-        book.author or "",
-        book.publisher or "",
-    ]
-    return _clean_text(" ".join([p for p in parts if p]))
 
 
 # 공백 제거
 def _clean_text(text: str) -> str:
     text = (text or "").strip()
     return text[:1500]
+
 
 # 파일 기반 벡터 DB에 저장
 def _upsert_chroma(book: Book, summary: str, emb: list[float]) -> None:
@@ -227,100 +273,3 @@ def _upsert_chroma(book: Book, summary: str, emb: list[float]) -> None:
 
 
 
-# ================================
-#  100자평 크롤링
-# ================================
-def crawl_short_reviews(item_id, isbn, max_pages=1):
-
-    reviews = []
-
-    for page in range(1, max_pages + 1):
-
-        url = (
-            "https://www.aladin.co.kr/ucl/shop/product/ajax/GetCommunityListAjax.aspx"
-            f"?ProductItemId={item_id}"
-            f"&itemId={item_id}"
-            f"&pageCount={max_pages}"
-            "&communitytype=CommentReview"
-            "&nemoType=-1"
-            f"&page={page}"
-            "&startNumber=1"
-            "&endNumber=10"
-            "&sort=2"
-            "&IsOrderer=1"
-            "&BranchType=1"
-            "&IsAjax=true"
-            "&pageType=0"
-        )
-
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Referer": f"https://www.aladin.co.kr/shop/wproduct.aspx?ItemId={item_id}",
-            "X-Requested-With": "XMLHttpRequest"
-        }
-        res = requests.get(url, headers=headers)
-        soup = BeautifulSoup(res.text, "html.parser")
-
-        li_blocks = soup.select("li")
-
-        if not li_blocks:
-            print("⚠️ 100자평 AJAX 응답 없음 → 중단")
-            break
-
-        #  2개 li가 한 세트이므로 2칸씩 점프
-        for i in range(0, len(li_blocks), 2):
-
-            try:
-
-                content_li = li_blocks[i]
-                meta_li = li_blocks[i + 1]
-
-                #  리뷰 본문 (스포일러 제외)
-                text_tag = content_li.select_one(
-                    "span[id^='spnPaper']:not([id*='Spoiler'])"
-                )
-                review_text = text_tag.text.strip() if text_tag else None
-
-                #  블로그 링크
-                blog_tag = content_li.select_one("a[href*='blog.aladin.co.kr']")
-                blog_url = blog_tag["href"] if blog_tag else None
-
-                # ⭐ 별점 (img 개수 기반, div.hundred_list 기준)
-                hundred_box = content_li.find_parent("div", class_="hundred_list")
-
-                if hundred_box:
-                    star_tag = hundred_box.select_one("div.HL_star")
-
-                    if star_tag:
-                        star_imgs = star_tag.find_all("img")
-                        star_on_count = sum(
-                            1 for img in star_imgs
-                            if "icon_star_on" in img.get("src", "")
-                        )
-                        rating = star_on_count * 2   # ✅ 10점 환산
-                    else:
-                        rating = None
-                else:
-                    rating = None
-
-
-                #  날짜
-                date_tag = meta_li.select_one("div.left span")
-                review_date = date_tag.text.strip() if date_tag else None
-
-                if review_text:
-                    reviews.append({
-                        "isbn13": isbn,
-                        "source": "aladin_short",
-                        "review_text": review_text,
-                        "rating": rating,
-                        "review_date": review_date,
-                        "blog_url": blog_url
-                    })
-
-            except IndexError:
-                continue   # ✅ 홀수 깨질 때 안전 처리
-
-        time.sleep(1.5)
-
-    return reviews

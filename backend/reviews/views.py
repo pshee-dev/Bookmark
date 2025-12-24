@@ -7,6 +7,7 @@ from rest_framework.status import HTTP_403_FORBIDDEN
 from books.models import Book
 from common.utils.paginations import apply_queryset_pagination
 from likes.models import Like
+from recommendations.services.review_vector_pipeline import enqueue_review_vector_update
 from .models import Review
 from .serializers import ReviewCreateSerializer, ReviewSerializer, ReviewUpdateSerializer
 from django.db.models import Count, OuterRef, Subquery, IntegerField, Value
@@ -44,6 +45,7 @@ def list_and_create(request, book_id):
             user=request.user,
             book=book
         )
+        enqueue_review_vector_update(review.id)
         return Response(
             ReviewSerializer(review).data,
             status=status.HTTP_201_CREATED

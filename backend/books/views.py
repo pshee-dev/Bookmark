@@ -218,7 +218,7 @@ def resolve_by_isbn(request):
         from recommendations.services.make_book_vector_pipeline_after_add_book import (
             enqueue_book_vector_build,
         )
-        enqueue_book_vector_build(book.id)
+        enqueue_book_vector_build(book.isbn)
     except Exception:
         pass
 

@@ -3,6 +3,12 @@ from typing import Any, Optional
 
 import requests
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 
 MODEL_NAME = "text-embedding-3-large"
 OPENAI_EMBED_URL = "https://gms.ssafy.io/gmsapi/api.openai.com/v1/embeddings"

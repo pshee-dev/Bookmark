@@ -133,6 +133,16 @@ def summarize_with_gpt4o_mini(bundle_text: str) -> dict:
 
 
 # =========================
+# 단건 요약
+# =========================
+def summarize_kyobo_reviews(reviews: list[str]) -> dict:
+    if not reviews:
+        return {"summary": "", "sentiment": "", "keywords": ""}
+    bundle_text = make_kyobo_bundle_text(reviews)
+    return summarize_with_gpt4o_mini(bundle_text)
+
+
+# =========================
 # 실행
 # =========================
 if __name__ == "__main__":
