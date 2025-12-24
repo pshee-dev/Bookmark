@@ -12,10 +12,16 @@ from langchain_core.embeddings import Embeddings
 
 from books.models import Book
 from recommendations.models import BookVector
-from recommendations.crollers.aladin_croller.get_reviews_from_aladin import (
+from recommendations.my_source.aladin_croller.get_reviews_from_aladin import (
     get_aladin_item_id,
-    crawl_short_reviews,
+    crawl_short_reviews as aladin_crawl_short_reviews,
 )
+from recommendations.my_source.summary.summarizer.summarize_aladin_short_reviews import (
+    summarize_aladin_short_reviews,
+)
+from recommendations.my_source.embeddings import make_embeddings
+from bs4 import BeautifulSoup
+
 
 # Model + vector DB config
 # 차원 수가 크고(3072) 정확도가 높은 OpenAI 임베딩 모델
@@ -64,7 +70,7 @@ def enqueue_book_vector_build(isbn: str) -> None:
 
     thread = threading.Thread( # 메인 요청 흐름을 막지 않도록 새 스레드 생성
         target=_build_book_vector,
-        args=(isbn),
+        args=(isbn,),
         daemon=True, # 서버 종료 시 같이 종료
     )
     thread.start() # 실제 비동기 실행
@@ -75,34 +81,50 @@ def _build_book_vector(isbn: str) -> None:
 
     close_old_connections() # 기존 DB 커넥션 재사용으로 인한 에러 방지 (스레드 환경 필수)
 
-    # ================================================================
-    #  2) 알라딘 100자평 크롤링 시작
-    # ================================================================
-    crawled_reviews = crawl_short_reviews(isbn, max_pages=1)
-
-    #test 크롤링 잘 됐는지 테스트 print(crawled_reviews)
-
     if not isbn: # ISBN 없는 책은 크롤링, 외부 요약 불가하므로 백터 생성 대상에서 제외
         return
 
-    aladin_texts = _croll_aladin_reviews(book.isbn, max_pages=2)
+    book = Book.objects.filter(isbn=isbn).first()
+
+    # ================================================================
+    #  2) 알라딘 100자평 크롤링 시작
+    # ================================================================
+    item_id = get_aladin_item_id(isbn)
+    if not item_id:
+        return
+    crawled_reviews = aladin_crawl_short_reviews(item_id, isbn, max_pages=1)
+
+    #test 크롤링 잘 됐는지 테스트 print(crawled_reviews)
 
 
     # ================================================================
-    #  3) 알라딘 100자평 전처리 시작 (요약)
+    #  3) 알라딘 100자평 전처리 (요약)
     # ================================================================
 
-    summary = _clean_text(" ".join(aladin_texts))
-    if not summary:
-        summary = _fetch_book_summary(book.isbn) or _fallback_summary(book)
-    if not summary:
+    review_texts = [
+        review["review_text"]
+        for review in crawled_reviews
+        if review.get("review_text")
+    ]
+    striped_text = _clean_text(" ".join(review_texts))
+
+    summarized_texts = summarize_aladin_short_reviews(review_texts)
+
+    if not summarized_texts:
+        summary = _fetch_book_summary(isbn) or (_fallback_summary(book) if book else "")
         return
 
 
-    # TODO 임베딩 파이프라인 추가
-    emb = _embed_text(summary) # GMS OpenAI를 호출하여 텍스트데이터를 임베딩
+    # ================================================================
+    #  4) 요약결과 임베딩
+    # ================================================================
+
+    emb = make_embeddings(summarized_texts) # GMS OpenAI를 호출하여 텍스트데이터를 임베딩
     if not emb:
         return
+
+
+
 
     # 책당 하나의 벡터 DB
         # - 벡터 DB(Chroma 컬렉션)는 하나지만 그 안에 문서(=벡터)는 여러 개 있을 수 있는 것.
@@ -116,7 +138,7 @@ def _build_book_vector(isbn: str) -> None:
     )
 
     # 파일 기반 벡터 DB에 저장
-    _upsert_chroma(book, summary, emb)
+    _upsert_chroma(book, summarized_texts, emb)
 
 
 def _fetch_book_summary(isbn: str) -> str:
@@ -139,7 +161,7 @@ def _fetch_book_summary(isbn: str) -> str:
 
 
 def _croll_aladin_reviews(isbn: str, max_pages: int = 2) -> list[str]:
-    item_id = get_aladin_item_id(isbn)
+    item_id = None#get_aladin_item_id(isbn)#임시
     if not item_id:
         return []
 
@@ -156,31 +178,10 @@ def _fallback_summary(book: Book) -> str:
     return _clean_text(" ".join([p for p in parts if p]))
 
 
+# 공백 제거
 def _clean_text(text: str) -> str:
     text = (text or "").strip()
     return text[:1500]
-
-
-def _embed_text(text: str) -> Optional[list[float]]:
-    api_key = os.getenv("GMS_KEY")
-    if not api_key:
-        return None
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": MODEL_NAME,
-        "input": [text],
-    }
-    try:
-        r = requests.post(OPENAI_EMBED_URL, headers=headers, json=payload, timeout=120)
-        r.raise_for_status()
-        data = r.json()
-        return data["data"][0]["embedding"]
-    except Exception:
-        return None
 
 # 파일 기반 벡터 DB에 저장
 def _upsert_chroma(book: Book, summary: str, emb: list[float]) -> None:

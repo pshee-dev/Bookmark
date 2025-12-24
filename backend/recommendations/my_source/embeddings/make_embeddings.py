@@ -25,7 +25,7 @@ except Exception:
 # 2) 설정
 # =========================
 INPUT_CSV = r"C:\Users\SSAFY\Desktop\asdf\AI_Recomendation_for_Bookmark\embeddings\kyobo_publisher_reviews_summaries_with_gpt4o_mini.csv"
-OUT_DIR = "kyobo_publisher_embeddings"
+OUT_DIR = ""
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # OpenAI (GMS OpenAI Gateway)
@@ -221,7 +221,10 @@ def embed_final(texts: List[str]) -> np.ndarray:
 #%% =========================
 # 8) 실행
 # =========================
-embeddings = embed_final(texts)
+embeddings=None
+def run_embed(texts: List[str], output_path: str) -> np.ndarray:
+    embeddings = embed_final(texts, output_path)
+    OUT_DIR = output_path
 print("embedding shape:", embeddings.shape)
 
 
