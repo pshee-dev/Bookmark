@@ -65,14 +65,17 @@
 
   const createReview = () => {
     // Todo: 리뷰 작성하기
+    router.push({name: 'reviewCreate', params: { username: username }})
   }
 
   const goReview = () => {
     // Todo: 작성한 리뷰 상세보기
+    // router.push({name: 'review', params: { username: username, reviewId: }})
   }
 
   const createGalfy = () => {
     // Todo: 갈피 작성하기
+    router.push({name: 'galfyCreate', params: { username: username }})
   }
 
   onMounted(() => {
@@ -138,6 +141,9 @@
         <ul v-if="galfyCount !== 0">
           <li
             v-for="galfy in galfyList"
+            :key="galfy.id"
+            :ref="collect"
+            class="fadeinup80"
           >
             <FeedBase :feed-type="'galfy'" :feed="galfy"/>
           </li>
@@ -159,6 +165,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 30px;
   }
 
   .page-title {

@@ -147,6 +147,12 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   line-height: 1.2;
 }
 
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
 .text-input {
   width: 100%;
   padding: 15px 20px;
@@ -163,6 +169,16 @@ table, caption, tbody, tfoot, thead, tr, th, td {
   border: 1px solid #ddd;
   color: #333;
   font-size: 16px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  color: #333;
+  font-size: 16px;
+  min-height: 200px;
 }
 
 .form-label {

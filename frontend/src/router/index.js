@@ -85,19 +85,19 @@ const router = createRouter({
       path: '/galfy/:username/create',
       name: 'galfyCreate',
       component: () => import('@/views/galfy/GalfyCreateView.vue'),
-      meta: { requiresAuth: true, ownerOnly: true },
+      meta: { requiresAuth: true, ownerOnly: true, type: 'galfy' },
     },
     {
       path: '/galfy/:username/:galfyId/update',
       name: 'galfyUpdate',
       component: () => import('@/views/galfy/GalfyUpdateView.vue'),
-      meta: { requiresAuth: true, ownerOnly: true },
+      meta: { requiresAuth: true, ownerOnly: true, type: 'galfy' },
     },
     {
       path: '/galfy/:username/:galfyId',
       name: 'galfy',
       component: () => import('@/views/galfy/GalfyDetailView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, type: 'galfy' },
     },
 
     // 리뷰 라우터
@@ -105,13 +105,13 @@ const router = createRouter({
       path: '/review/:username/create',
       name: 'reviewCreate',
       component: () => import('@/views/review/ReviewCreateView.vue'),
-      meta: { requiresAuth: true, ownerOnly: true },
+      meta: { requiresAuth: true, ownerOnly: true, type: 'review' },
     },
     {
       path: '/review/:username/:reviewId/update',
       name: 'reviewUpdate',
       component: () => import('@/views/review/ReviewUpdateView.vue'),
-      meta: { requiresAuth: true, ownerOnly: true },
+      meta: { requiresAuth: true, ownerOnly: true, type: 'review' },
     },
     {
       path: '/review/:username/:reviewId/recommend',
@@ -123,7 +123,7 @@ const router = createRouter({
       path: '/review/:username/:reviewId',
       name: 'review',
       component: () => import('@/views/review/ReviewDetailView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, type: 'review' },
     },
 
     // 마이페이지 라우터
