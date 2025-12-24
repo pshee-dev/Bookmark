@@ -1,5 +1,10 @@
 <script setup>
   import { computed } from 'vue'
+  import { useFeedStore } from '@/stores/feeds'
+  import iconLike from '@/assets/images/common/icon_like.png'
+  import iconLikeActive from '@/assets/images/common/icon_likes_active.png'
+
+  const feedStore = useFeedStore()
 
   const props = defineProps({
     feed: Object,
@@ -12,6 +17,14 @@
 
   const goFeedDetail = () => {
 
+  }
+
+  const likeIcon = computed(() => {
+    return props.feed?.is_liked ? iconLikeActive : iconLike
+  })
+
+  const like = async () => {
+    await feedStore.actionLikes(props.feedType, props.feed.id)
   }
 </script>
 
@@ -34,13 +47,13 @@
       <p class="content">{{ feed.content }}</p>
     </div>
     <div class="actions">
-      <button class="btn-action like">
-        <img src="@/assets/images/common/icon_like.png" alt="like">
-        <!-- {{ feed.likeCount }} -->
+      <button class="btn-action like" @click.stop="like">
+        <img :src="likeIcon" alt="like">
+        <p class="action-txt">{{ feed.likes_count }}</p>
       </button>
       <button class="btn-action comment">
         <img src="@/assets/images/common/icon_comment.png" alt="comment">
-        <!-- {{ feed.commentCount }} -->
+        <p class="action-txt">{{ feed.comments_count }}</p>
       </button>
     </div>
   </div>
@@ -130,5 +143,13 @@
     border: none;
     background-color: transparent;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-txt {
+    font-size: 16px;
+    font-weight: 600;
   }
 </style>
