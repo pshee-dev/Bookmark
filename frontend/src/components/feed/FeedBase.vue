@@ -1,10 +1,16 @@
 <script setup>
   import { computed } from 'vue'
-  import { useFeedStore } from '@/stores/feeds'
+  import { useRouter } from 'vue-router'
   import iconLike from '@/assets/images/common/icon_like.png'
   import iconLikeActive from '@/assets/images/common/icon_likes_active.png'
+  import { useFeedStore } from '@/stores/feeds'
+  import { useAccountStore } from '@/stores/accounts'
+  import { storeToRefs } from 'pinia'
 
+  const router = useRouter()
+  const accountStore = useAccountStore()
   const feedStore = useFeedStore()
+  const { user } = storeToRefs(accountStore)
 
   const props = defineProps({
     feed: Object,
@@ -16,7 +22,15 @@
   })
 
   const goFeedDetail = () => {
-
+    const username = props.feed?.user?.username ?? user?.value?.username
+    if (!username || !props.feed?.id) return
+    if (props.feedType === 'review') {
+      router.push({ name: 'review', params: { username, reviewId: props.feed.id } })
+      return
+    }
+    if (props.feedType === 'galfy') {
+      router.push({ name: 'galfy', params: { username, galfyId: props.feed.id } })
+    }
   }
 
   const likeIcon = computed(() => {

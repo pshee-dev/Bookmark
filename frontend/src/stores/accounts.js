@@ -73,6 +73,7 @@ export const useAccountStore = defineStore('account', () => {
       .then(res => {
         console.log(res.data)
         user.value = {
+          id: res.data.id,
           username: res.data.username,
           name: res.data.full_name,
         }
