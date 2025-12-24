@@ -4,12 +4,14 @@
   import iconLike from '@/assets/images/common/icon_like.png'
   import iconLikeActive from '@/assets/images/common/icon_likes_active.png'
   import { useFeedStore } from '@/stores/feeds'
+  import { useCommentStore } from '@/stores/comments'
   import { useAccountStore } from '@/stores/accounts'
   import { storeToRefs } from 'pinia'
 
   const router = useRouter()
   const accountStore = useAccountStore()
   const feedStore = useFeedStore()
+  const commentStore = useCommentStore()
   const { user } = storeToRefs(accountStore)
 
   const props = defineProps({
@@ -40,6 +42,10 @@
   const like = async () => {
     await feedStore.actionLikes(props.feedType, props.feed.id)
   }
+
+  const openComments = () => {
+    commentStore.openComments({ type: props.feedType, id: props.feed.id })
+  }
 </script>
 
 <template>
@@ -65,7 +71,7 @@
         <img :src="likeIcon" alt="like">
         <p class="action-txt">{{ feed.likes_count }}</p>
       </button>
-      <button class="btn-action comment">
+      <button class="btn-action comment" @click.stop="openComments">
         <img src="@/assets/images/common/icon_comment.png" alt="comment">
         <p class="action-txt">{{ feed.comments_count }}</p>
       </button>

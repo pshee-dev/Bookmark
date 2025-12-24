@@ -23,7 +23,7 @@ export const useAccountStore = defineStore('account', () => {
     signupErrors.value = {} // 이전 에러 초기화
     axios({
       method: 'post',
-      url: `${API_URL}/accounts/signup/`,
+      url: `${API_URL}/api/v1/accounts/signup/`,
       data: formData,
     })
       .then(res => {
@@ -48,7 +48,7 @@ export const useAccountStore = defineStore('account', () => {
   const login = function ({ username, password }) {
     axios({
       method: 'post',
-      url: `${API_URL}/accounts/login/`,
+      url: `${API_URL}/api/v1/accounts/login/`,
       data: {
         username, 
         password,
@@ -67,7 +67,7 @@ export const useAccountStore = defineStore('account', () => {
   const userInfo = function(token) {
     axios({
       method: 'get',
-      url: `${API_URL}/accounts/user/`,
+      url: `${API_URL}/api/v1/accounts/user/`,
       headers: {Authorization: `Token ${token}`}
     })
       .then(res => {
@@ -90,7 +90,7 @@ export const useAccountStore = defineStore('account', () => {
   const logout = function () {
     axios({
       method: 'post',
-      url: `${API_URL}/accounts/logout/`
+      url: `${API_URL}/api/v1/accounts/logout/`
     })
       .then(res => {
         token.value = null

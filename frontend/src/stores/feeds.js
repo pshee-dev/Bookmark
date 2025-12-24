@@ -32,7 +32,7 @@ export const useFeedStore = defineStore('feed', () => {
         ? { headers: { Authorization: `Token ${token.value}` } }
         : {}
       const res = await axios.get(
-        `${API_URL}/books/${bookId}/galfies/`, 
+        `${API_URL}/api/v1/books/${bookId}/galfies/`, 
         {                                                                                            
           params: {                                                                                  
             'sort-direction': sordDirection,                                                         
@@ -59,7 +59,7 @@ export const useFeedStore = defineStore('feed', () => {
         ? { headers: { Authorization: `Token ${token.value}` } }
         : {}
       const res = await axios.get(
-        `${API_URL}/books/${bookId}/reviews/`,
+        `${API_URL}/api/v1/books/${bookId}/reviews/`,
         {
           params: {
             'sort-direction': sordDirection,
@@ -84,7 +84,7 @@ export const useFeedStore = defineStore('feed', () => {
     isLoading.value = true
     try {
       const res = await axios.post(
-        `${API_URL}/books/${bookId}/galfies/`,
+        `${API_URL}/api/v1/books/${bookId}/galfies/`,
         payload,
         {
           headers: {
@@ -109,7 +109,7 @@ export const useFeedStore = defineStore('feed', () => {
     isLoading.value = true
     try {
       const res = await axios.patch(
-        `${API_URL}/galfies/${galfyId}/`,
+        `${API_URL}/api/v1/galfies/${galfyId}/`,
         payload,
         {
           headers: {
@@ -136,7 +136,7 @@ export const useFeedStore = defineStore('feed', () => {
     isLoading.value = true
     try {
       const res = await axios.post(
-        `${API_URL}/books/${bookId}/reviews/`,
+        `${API_URL}/api/v1/books/${bookId}/reviews/`,
         payload,
         {
           headers: {
@@ -161,7 +161,7 @@ export const useFeedStore = defineStore('feed', () => {
     isLoading.value = true
     try {
       const res = await axios.patch(
-        `${API_URL}/reviews/${reviewId}/`,
+        `${API_URL}/api/v1/reviews/${reviewId}/`,
         payload,
         {
           headers: {
@@ -191,11 +191,18 @@ export const useFeedStore = defineStore('feed', () => {
     target.is_liked = isLiked
   }
 
+  const updateFeedCommentsCount = (feedType, feedId, count) => {
+    const targetList = feedType === 'review' ? reviewList.value : galfyList.value
+    const target = targetList.find((item) => item.id === feedId)
+    if (!target) return
+    target.comments_count = count
+  }
+
   const actionLikes = async (feedType, feedId) => {
     isLoading.value = true
     try {
       const res = await axios.post(
-        `${API_URL}/likes/`,
+        `${API_URL}/api/v1/likes/`,
         {
           target_type: feedType,
           target_id: feedId,
@@ -229,5 +236,6 @@ export const useFeedStore = defineStore('feed', () => {
     createReview,
     updateReview,
     actionLikes,
+    updateFeedCommentsCount,
   }
 })

@@ -20,7 +20,7 @@
     if (!id) return
     try {
       const res = await axios.get(
-        `${API_URL}/reviews/${id}/`,
+        `${API_URL}/api/v1/reviews/${id}/`,
         token.value
           ? { headers: { Authorization: `Token ${token.value}` } }
           : {}

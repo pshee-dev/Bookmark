@@ -8,12 +8,14 @@
   import { useAccountStore } from '@/stores/accounts'
   import { useErrorStore } from '@/stores/errors'
   import { useFeedStore } from '@/stores/feeds'
+  import { useCommentStore } from '@/stores/comments'
 
   const route = useRoute()
   const router = useRouter()
   const errorStore = useErrorStore()
   const accountStore = useAccountStore()
   const feedStore = useFeedStore()
+  const commentStore = useCommentStore()
   const { user, token } = storeToRefs(accountStore)
 
   const API_URL = import.meta.env.VITE_API_URL
@@ -45,7 +47,7 @@
     if (!showFollowButton.value || !token.value) return
     try {
       const res = await axios.get(
-        `${API_URL}/users/${user.value.id}/followings/`,
+        `${API_URL}/api/v1/users/${user.value.id}/followings/`,
         {
           headers: {
             Authorization: `Token ${token.value}`,
@@ -63,7 +65,7 @@
     if (!showFollowButton.value || !token.value) return
     try {
       const res = await axios.post(
-        `${API_URL}/users/${review.value.user.id}/follow/`,
+        `${API_URL}/api/v1/users/${review.value.user.id}/follow/`,
         {},
         {
           headers: {
@@ -82,7 +84,7 @@
     isLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/reviews/${id}/`,
+        `${API_URL}/api/v1/reviews/${id}/`,
         token.value
           ? { headers: { Authorization: `Token ${token.value}` } }
           : {}
@@ -117,6 +119,11 @@
     }
   }
 
+  const openComments = () => {
+    if (!review.value?.id) return
+    commentStore.openComments({ type: 'review', id: review.value.id })
+  }
+
   const goUpdateReview = () => {
     if (!review.value?.id || !review.value?.user?.username) return
     router.push({ name: 'reviewUpdate', params: { username: review.value.user.username, reviewId: review.value.id } })
@@ -128,7 +135,7 @@
     if (!confirmed) return
     try {
       await axios.delete(
-        `${API_URL}/reviews/${review.value.id}/`,
+        `${API_URL}/api/v1/reviews/${review.value.id}/`,
         {
           headers: {
             Authorization: `Token ${token.value}`
@@ -167,7 +174,7 @@
           class="btn btn-small btn-follow"
           @click="toggleFollow"
         >
-          {{ isFollowing ? '팔로잉' : '팔로우' }}
+          {{ isFollowing ? '언팔로우' : '팔로우' }}
         </button>
       </div>
 
@@ -193,7 +200,7 @@
           <img :src="likeIcon" alt="like">
           <p class="action-txt">{{ review?.likes_count ?? 0 }}</p>
         </button>
-        <button class="btn-action comment">
+        <button class="btn-action comment" @click.stop="openComments">
           <img src="@/assets/images/common/icon_comment.png" alt="comment">
           <p class="action-txt">{{ review?.comments_count ?? 0 }}</p>
         </button>
