@@ -65,7 +65,7 @@
       class="book-list"
       :modules="[Autoplay, Navigation]"
       :slides-per-view="6"
-      :space-between="30"
+      :space-between="0"
       :loop="true"
       :autoplay="{ delay: 2000, disableOnInteraction: false }"
       :navigation="{
@@ -78,6 +78,7 @@
       <SwiperSlide 
         v-for="book in bookList"
         :key="book.id"
+        class="book"
       >
         <div class="thumbnail">
           <img v-if="book.thumbnail" :src="book.thumbnail" :alt="book.title">
@@ -105,7 +106,7 @@
 }
 
 .swiper-slide {
-  padding: 0 20px;
+  padding: 0 15px;
 }
 
 .btn-swiper {
@@ -138,9 +139,15 @@
   animation-delay: .2s;
 }
 
+.book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .thumbnail {
-  width: 235px;
-  height: 330px;
+  width: 11vw;
+  height: 16vw;
   border-radius: 20px 60px 20px 60px;
   overflow: hidden;
   border: 1px solid #ddd;
