@@ -46,7 +46,7 @@ def list_and_create(request, book_id):
             book=book
         )
         return Response(
-            GalfySerializer(galfy).data,
+            GalfySerializer(galfy, context={"request": request}).data,
             status=status.HTTP_201_CREATED
         )
 
@@ -88,7 +88,7 @@ def list_and_create(request, book_id):
 
 
         page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
-        serializer = GalfySerializer(page, many=True)
+        serializer = GalfySerializer(page, many=True, context={"request": request})
 
         response = paginator.get_paginated_response(serializer.data)
         response.data["page_size"] = len(page)
@@ -130,7 +130,7 @@ def detail_and_update_and_delete(request, galfy_id):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
-            GalfySerializer(galfy).data,
+            GalfySerializer(galfy, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
 
@@ -153,7 +153,7 @@ def detail_and_update_and_delete(request, galfy_id):
 
     elif request.method == 'GET':
         return Response(
-            GalfySerializer(galfy).data,
+            GalfySerializer(galfy, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
 

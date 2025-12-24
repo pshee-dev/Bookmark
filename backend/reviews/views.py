@@ -46,7 +46,7 @@ def list_and_create(request, book_id):
             book=book
         )
         return Response(
-            ReviewSerializer(review).data,
+            ReviewSerializer(review, context={"request": request}).data,
             status=status.HTTP_201_CREATED
         )
 
@@ -87,7 +87,7 @@ def list_and_create(request, book_id):
         sort_field = 'like_count'
 
     page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
-    serializer = ReviewSerializer(page, many=True)
+    serializer = ReviewSerializer(page, many=True, context={"request": request})
 
     response = paginator.get_paginated_response(serializer.data)
     response.data["page_size"] = len(page)
@@ -129,7 +129,7 @@ def detail_and_update_and_delete(request, review_id):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
-            ReviewSerializer(review).data,
+            ReviewSerializer(review, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
     elif request.method == 'DELETE':
@@ -152,7 +152,7 @@ def detail_and_update_and_delete(request, review_id):
 
     if request.method == 'GET':
         return Response(
-            ReviewSerializer(review).data,
+            ReviewSerializer(review, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
 

@@ -28,6 +28,9 @@ export const useFeedStore = defineStore('feed', () => {
   const fetchGalfies = async (bookId, { mine = false } = {}) => {
     isLoading.value = true
     try {
+      const authHeaders = token.value
+        ? { headers: { Authorization: `Token ${token.value}` } }
+        : {}
       const res = await axios.get(
         `${API_URL}/books/${bookId}/galfies/`, 
         {                                                                                            
@@ -37,7 +40,7 @@ export const useFeedStore = defineStore('feed', () => {
             page_size: pageSize,                                                                     
             ...(mine ? { mine: true } : {}),                                                         
           },                                                                                         
-          ...(mine ? { headers: { Authorization: `Token ${token.value}` } } : {}),                   
+          ...(mine ? { headers: { Authorization: `Token ${token.value}` } } : authHeaders),                   
         } 
       )
       galfyList.value = res.data.results
@@ -52,6 +55,9 @@ export const useFeedStore = defineStore('feed', () => {
   const fetchReviews = async (bookId, { mine = false } = {}) => {
     isLoading.value = true
     try {
+      const authHeaders = token.value
+        ? { headers: { Authorization: `Token ${token.value}` } }
+        : {}
       const res = await axios.get(
         `${API_URL}/books/${bookId}/reviews/`,
         {
@@ -61,7 +67,7 @@ export const useFeedStore = defineStore('feed', () => {
             page_size: pageSize,
             ...(mine ? { mine: true } : {}),
           },
-          ...(mine ? { headers: { Authorization: `Token ${token.value}` } } : {}),
+          ...(mine ? { headers: { Authorization: `Token ${token.value}` } } : authHeaders),
         }
       )
       reviewList.value = res.data.results

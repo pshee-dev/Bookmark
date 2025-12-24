@@ -7,10 +7,10 @@ from galfies.models import Galfy
 
 def find_serializer_feed_item(obj, request):
     if isinstance(obj, Galfy):
-        return GalfySerializer(obj)
+        return GalfySerializer(obj, context={"request": request})
     elif isinstance(obj, Comment):
-        return CommentSerializer(obj)
+        return CommentSerializer(obj, context={"request": request})
     elif isinstance(obj, Review):
-        return ReviewSerializer(obj)
+        return ReviewSerializer(obj, context={"request": request})
     else:
         raise TypeError
