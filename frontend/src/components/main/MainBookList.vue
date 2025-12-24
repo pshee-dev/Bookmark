@@ -59,37 +59,39 @@
       </div>
     </div>
 
-    <Swiper 
-      v-if="bookList.length"
-      @swiper="onSwiper"
-      class="book-list"
-      :modules="[Autoplay, Navigation]"
-      :slides-per-view="6"
-      :space-between="0"
-      :loop="true"
-      :autoplay="{ delay: 2000, disableOnInteraction: false }"
-      :navigation="{
-        nextEl: '.btn-next',
-        prevEl: '.btn-prev',
-      }"
-      :observer="true"
-      :observe-parents="true"
-    >
-      <SwiperSlide 
-        v-for="book in bookList"
-        :key="book.id"
-        class="book"
+    <div class="fadein" :ref="collect">
+      <Swiper 
+        v-if="bookList.length"
+        @swiper="onSwiper"
+        class="book-list"
+        :modules="[Autoplay, Navigation]"
+        :slides-per-view="6"
+        :space-between="0"
+        :loop="true"
+        :autoplay="{ delay: 2000, disableOnInteraction: false }"
+        :navigation="{
+          nextEl: '.btn-next',
+          prevEl: '.btn-prev',
+        }"
+        :observer="true"
+        :observe-parents="true"
       >
-        <div class="thumbnail">
-          <img v-if="book.thumbnail" :src="book.thumbnail" :alt="book.title">
-          <img v-else src="@/assets/images/no_img_bookcover.jpg" alt="no-image">
-        </div>
-        <div class="info">
-          <h2 class="title f-pre">{{ book.title }}</h2>
-          <p class="author f-pre">{{ book.author }}</p>
-        </div>
-      </SwiperSlide>
-    </Swiper>
+        <SwiperSlide 
+          v-for="book in bookList"
+          :key="book.id"
+          class="book"
+        >
+          <div class="thumbnail">
+            <img v-if="book.thumbnail" :src="book.thumbnail" :alt="book.title">
+            <img v-else src="@/assets/images/no_img_bookcover.jpg" alt="no-image">
+          </div>
+          <div class="info">
+            <h2 class="title f-pre">{{ book.title }}</h2>
+            <p class="author f-pre">{{ book.author }}</p>
+          </div>
+        </SwiperSlide>
+      </Swiper>
+    </div>
   </section>
 </template>
 
@@ -135,10 +137,6 @@
   transform: rotate(180deg);
 }
 
-.fadein.show {
-  animation-delay: .2s;
-}
-
 .book {
   display: flex;
   flex-direction: column;
@@ -174,4 +172,9 @@
   font-size: 18px;
   color: #555;
 }
+
+.fadein.show {
+  animation-delay: .3s;
+}
+
 </style>
