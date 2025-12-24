@@ -32,8 +32,6 @@ HEADERS = {
 #  2. CSV 로드
 # ================================
 
-books_df = pd.read_csv(INPUT_CSV)
-print(f"✅ 총 {len(books_df)}권 로드 완료")
 
 
 # ================================
@@ -90,7 +88,7 @@ def crawl_short_reviews(item_id, isbn, max_pages=1):
             "https://www.aladin.co.kr/ucl/shop/product/ajax/GetCommunityListAjax.aspx"
             f"?ProductItemId={item_id}"
             f"&itemId={item_id}"
-            f"&pageCount={max_pages}"
+            "&pageCount=10"
             "&communitytype=CommentReview"
             "&nemoType=-1"
             f"&page={page}"
@@ -256,55 +254,64 @@ def crawl_my_reviews(isbn, max_pages=50):
 # 6. 전체 ISBN 순회
 # ================================
 
-all_reviews = []
 
-print(" 알라딘 리뷰 크롤링 시작")
+def main():
+    books_df = pd.read_csv(INPUT_CSV)
+    print(f"Loaded {len(books_df)} books")
 
-for idx, row in tqdm(books_df.iterrows(), total=len(books_df)):
-    isbn = str(row["isbn13"]).strip()
-    title = row["title"]
+    all_reviews = []
 
-    print(f"\n📘 크롤링 중: {title} ({isbn})")
+    print(" 알라딘 리뷰 크롤링 시작")
 
-    # 1단계: ItemId 추출
-    item_id = get_aladin_item_id(isbn)
+    for idx, row in tqdm(books_df.iterrows(), total=len(books_df)):
+        isbn = str(row["isbn13"]).strip()
+        title = row["title"]
 
-    if not item_id:
-        print("❌ ItemId 못 찾음 → 스킵")
-        continue
+        print(f"\n📘 크롤링 중: {title} ({isbn})")
 
-    print(f"ItemId 추출 성공: {item_id}")
+        # 1단계: ItemId 추출
+        item_id = get_aladin_item_id(isbn)
 
+        if not item_id:
+            print("❌ ItemId 못 찾음 → 스킵")
+            continue
 
-    # 2단계: 100자평
-    short_reviews = crawl_short_reviews(item_id, isbn, max_pages=50)
-    print(f"100자평 {len(short_reviews)}개")
-
-    """# 3단계: 마이리뷰
-    #my_reviews = crawl_my_reviews(isbn, max_pages=10)
-    my_reviews = new_crawl_my_reviews(item_id, max_pages=10)
-    print(f"마이리뷰 {len(my_reviews)}개")"""
+        print(f"ItemId 추출 성공: {item_id}")
 
 
+        # 2단계: 100자평
+        short_reviews = crawl_short_reviews(item_id, isbn, max_pages=50)
+        print(f"100자평 {len(short_reviews)}개")
 
-    all_reviews.extend(short_reviews)
-    #all_reviews.extend(my_reviews)
+        """# 3단계: 마이리뷰
+        #my_reviews = crawl_my_reviews(isbn, max_pages=10)
+        my_reviews = new_crawl_my_reviews(item_id, max_pages=10)
+        print(f"마이리뷰 {len(my_reviews)}개")"""
 
-    # ISBN 하나 처리 후 쉬기
-    time.sleep(1)
 
 
-# ================================
-# 7. CSV 저장
-# ================================
+        all_reviews.extend(short_reviews)
+        #all_reviews.extend(my_reviews)
 
-reviews_df = pd.DataFrame(all_reviews)
+        # ISBN 하나 처리 후 쉬기
+        time.sleep(1)
 
-reviews_df.to_csv(
-    OUTPUT_CSV,
-    index=False,
-    encoding="utf-8-sig"
-)
 
-print("알라딘 리뷰 크롤링 완료!")
-print(f"저장 파일: {OUTPUT_CSV}")
+    # ================================
+    # 7. CSV 저장
+    # ================================
+
+    reviews_df = pd.DataFrame(all_reviews)
+
+    reviews_df.to_csv(
+        OUTPUT_CSV,
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    print("알라딘 리뷰 크롤링 완료!")
+    print(f"저장 파일: {OUTPUT_CSV}")
+
+
+if __name__ == "__main__":
+    main()

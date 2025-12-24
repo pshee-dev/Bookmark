@@ -12,6 +12,10 @@ from langchain_core.embeddings import Embeddings
 
 from books.models import Book
 from recommendations.models import BookVector
+from recommendations.crollers.aladin_croller.get_reviews_from_aladin import (
+    get_aladin_item_id,
+    crawl_short_reviews,
+)
 
 # Model + vector DB config
 # 차원 수가 크고(3072) 정확도가 높은 OpenAI 임베딩 모델
@@ -52,38 +56,48 @@ class PrecomputedEmbedding(Embeddings):
     def embed_query(self, text):
         raise RuntimeError("Query embedding must be generated separately")
 
-# 외부에서 호출하는 함수로, 비동기 처리의 진입점이다.
-def enqueue_book_vector_build(book_id: int) -> None:
+# ================================================================
+#  1) 외부에서 호출하는 함수로, 비동기 처리의 진입점
+# ================================================================
+
+def enqueue_book_vector_build(isbn: str) -> None:
 
     thread = threading.Thread( # 메인 요청 흐름을 막지 않도록 새 스레드 생성
         target=_build_book_vector,
-        args=(book_id,),
+        args=(isbn),
         daemon=True, # 서버 종료 시 같이 종료
     )
     thread.start() # 실제 비동기 실행
 
-# 책 하나 → 요약 → 임베딩 → DB + Chroma 저장까지의 벡터 생성 파이프라인
-def _build_book_vector(book_id: int) -> None:
+
+#  << 책 하나 → 요약 → 임베딩 → DB + Chroma 저장까지의 벡터 생성 파이프라인 >>
+def _build_book_vector(isbn: str) -> None:
 
     close_old_connections() # 기존 DB 커넥션 재사용으로 인한 에러 방지 (스레드 환경 필수)
-    try:
-        book = Book.objects.get(id=book_id)
-    except Book.DoesNotExist: # 책이 없다면 예외 던지지 않고 종료
+
+    # ================================================================
+    #  2) 알라딘 100자평 크롤링 시작
+    # ================================================================
+    crawled_reviews = crawl_short_reviews(isbn, max_pages=1)
+
+    #test 크롤링 잘 됐는지 테스트 print(crawled_reviews)
+
+    if not isbn: # ISBN 없는 책은 크롤링, 외부 요약 불가하므로 백터 생성 대상에서 제외
         return
-    if not book.isbn: # ISBN 없는 책은 외부 요약 불가하므로 백터 생성 대상에서 제외
-        return
 
-    ## TODO 크롤링 파이프라인 추가
-        ## TODO aladin 리뷰 크롤링 파이프라인
-        ## TODO 교보문고 리뷰 크롤링 파이프라인
-        ## TODO 교보문고 출판사 서평 크롤링 파이프라인
+    aladin_texts = _croll_aladin_reviews(book.isbn, max_pages=2)
 
 
+    # ================================================================
+    #  3) 알라딘 100자평 전처리 시작 (요약)
+    # ================================================================
 
-    # TODO 요약 파이프라인 추가
-    summary = None # 요약된 텍스트
+    summary = _clean_text(" ".join(aladin_texts))
+    if not summary:
+        summary = _fetch_book_summary(book.isbn) or _fallback_summary(book)
     if not summary:
         return
+
 
     # TODO 임베딩 파이프라인 추가
     emb = _embed_text(summary) # GMS OpenAI를 호출하여 텍스트데이터를 임베딩
@@ -122,6 +136,15 @@ def _fetch_book_summary(isbn: str) -> str:
     info = items[0].get("volumeInfo") or {}
     description = info.get("description") or ""
     return _clean_text(description)
+
+
+def _croll_aladin_reviews(isbn: str, max_pages: int = 2) -> list[str]:
+    item_id = get_aladin_item_id(isbn)
+    if not item_id:
+        return []
+
+    reviews = crawl_short_reviews(item_id, isbn, max_pages=max_pages)
+    return [review["review_text"] for review in reviews if review.get("review_text")]
 
 
 def _fallback_summary(book: Book) -> str:
@@ -200,3 +223,103 @@ def _upsert_chroma(book: Book, summary: str, emb: list[float]) -> None:
 
     # 디스크에 저장하여, 서버 재시작 후에도 유지되도록 한다.
     vectordb.persist()
+
+
+
+# ================================
+#  100자평 크롤링
+# ================================
+def crawl_short_reviews(item_id, isbn, max_pages=1):
+
+    reviews = []
+
+    for page in range(1, max_pages + 1):
+
+        url = (
+            "https://www.aladin.co.kr/ucl/shop/product/ajax/GetCommunityListAjax.aspx"
+            f"?ProductItemId={item_id}"
+            f"&itemId={item_id}"
+            f"&pageCount={max_pages}"
+            "&communitytype=CommentReview"
+            "&nemoType=-1"
+            f"&page={page}"
+            "&startNumber=1"
+            "&endNumber=10"
+            "&sort=2"
+            "&IsOrderer=1"
+            "&BranchType=1"
+            "&IsAjax=true"
+            "&pageType=0"
+        )
+
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Referer": f"https://www.aladin.co.kr/shop/wproduct.aspx?ItemId={item_id}",
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        res = requests.get(url, headers=headers)
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        li_blocks = soup.select("li")
+
+        if not li_blocks:
+            print("⚠️ 100자평 AJAX 응답 없음 → 중단")
+            break
+
+        #  2개 li가 한 세트이므로 2칸씩 점프
+        for i in range(0, len(li_blocks), 2):
+
+            try:
+
+                content_li = li_blocks[i]
+                meta_li = li_blocks[i + 1]
+
+                #  리뷰 본문 (스포일러 제외)
+                text_tag = content_li.select_one(
+                    "span[id^='spnPaper']:not([id*='Spoiler'])"
+                )
+                review_text = text_tag.text.strip() if text_tag else None
+
+                #  블로그 링크
+                blog_tag = content_li.select_one("a[href*='blog.aladin.co.kr']")
+                blog_url = blog_tag["href"] if blog_tag else None
+
+                # ⭐ 별점 (img 개수 기반, div.hundred_list 기준)
+                hundred_box = content_li.find_parent("div", class_="hundred_list")
+
+                if hundred_box:
+                    star_tag = hundred_box.select_one("div.HL_star")
+
+                    if star_tag:
+                        star_imgs = star_tag.find_all("img")
+                        star_on_count = sum(
+                            1 for img in star_imgs
+                            if "icon_star_on" in img.get("src", "")
+                        )
+                        rating = star_on_count * 2   # ✅ 10점 환산
+                    else:
+                        rating = None
+                else:
+                    rating = None
+
+
+                #  날짜
+                date_tag = meta_li.select_one("div.left span")
+                review_date = date_tag.text.strip() if date_tag else None
+
+                if review_text:
+                    reviews.append({
+                        "isbn13": isbn,
+                        "source": "aladin_short",
+                        "review_text": review_text,
+                        "rating": rating,
+                        "review_date": review_date,
+                        "blog_url": blog_url
+                    })
+
+            except IndexError:
+                continue   # ✅ 홀수 깨질 때 안전 처리
+
+        time.sleep(1.5)
+
+    return reviews
