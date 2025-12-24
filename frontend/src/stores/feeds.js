@@ -49,16 +49,19 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
-  const fetchReviews = async (bookId) => {
+  const fetchReviews = async (bookId, { mine = false } = {}) => {
     isLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/books/${bookId}/reviews/`, {
+        `${API_URL}/books/${bookId}/reviews/`,
+        {
           params: {
-            'sort-direction' : sordDirection,
-            'sort-field' : sortField,
-            page_size : pageSize,
-          }
+            'sort-direction': sordDirection,
+            'sort-field': sortField,
+            page_size: pageSize,
+            ...(mine ? { mine: true } : {}),
+          },
+          ...(mine ? { headers: { Authorization: `Token ${token.value}` } } : {}),
         }
       )
       reviewList.value = res.data.results
@@ -85,6 +88,31 @@ export const useFeedStore = defineStore('feed', () => {
       )
       galfyList.value = [res.data, ...galfyList.value]
       galfyCount.value += 1
+      router.back()
+      return res.data
+    } catch (err) {
+      errorStore.handleRequestError(err)
+      return null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const createReview = async (bookId, payload) => {
+    if (!bookId) return null
+    isLoading.value = true
+    try {
+      const res = await axios.post(
+        `${API_URL}/books/${bookId}/reviews/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`
+          }
+        }
+      )
+      reviewList.value = [res.data, ...reviewList.value]
+      reviewCount.value += 1
       router.back()
       return res.data
     } catch (err) {
@@ -137,6 +165,7 @@ export const useFeedStore = defineStore('feed', () => {
     fetchGalfies,
     fetchReviews,
     createGalfy,
+    createReview,
     actionLikes,
   }
 })

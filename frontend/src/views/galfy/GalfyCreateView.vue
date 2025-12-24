@@ -1,15 +1,5 @@
 <script setup>
-  import { computed } from 'vue'
-  import { useRoute } from 'vue-router'
-  import { useLibraryStore } from '@/stores/libraries'
-  import { storeToRefs } from 'pinia'
   import GalfyForm from '@/components/feed/GalfyForm.vue'
-
-  const route = useRoute()
-  const createType = route.meta.type
-
-  const libraryStore = useLibraryStore()
-
 </script>
 
 <template>
