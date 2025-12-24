@@ -8,6 +8,10 @@ export function useScrollReveal() {
   // DOM 요소 → ScrollTrigger 인스턴스 1:1 매핑
   const triggers = new Map()
 
+  const refresh = () => {
+    requestAnimationFrame(() => ScrollTrigger.refresh())
+  }
+
   const collect = (el) => {
     // el이 null 이거나 이미 처리된 요소인 경우 무시
     if (!el || triggers.has(el)) return
@@ -33,8 +37,8 @@ export function useScrollReveal() {
 
   onMounted(async () => {
     await nextTick()
-    requestAnimationFrame(() => ScrollTrigger.refresh())
+    refresh()
   })
 
-  return { collect }
+  return { collect, refresh }
 }

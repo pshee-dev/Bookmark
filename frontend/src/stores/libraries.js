@@ -209,7 +209,7 @@ export const useLibraryStore = defineStore('library', () => {
 }, {
   persist: [
     {
-      key: 'libraries-local',
+      key: 'libraries-session',
       pick: ['libraryBook'],
       storage: sessionStorage,
     }

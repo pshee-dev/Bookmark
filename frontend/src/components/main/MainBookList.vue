@@ -8,7 +8,7 @@
   import axios from 'axios'  
 
   import { useScrollReveal } from '@/composables/scrollReveal'
-  const { collect } = useScrollReveal()
+  const { collect, refresh } = useScrollReveal()
 
   import { useErrorStore } from '@/stores/errors'
   const errorStore = useErrorStore()
@@ -35,11 +35,13 @@
       .then(res => {
         bookList.value = res.data.results ?? []
         nextTick(() => {
-          if (!swiperRef.value) return
-          swiperRef.value.update()
-          if (swiperRef.value.autoplay) {
-            swiperRef.value.autoplay.start()
+          if (swiperRef.value) {
+            swiperRef.value.update()
+            if (swiperRef.value.autoplay) {
+              swiperRef.value.autoplay.start()
+            }
           }
+          refresh()
         })
       })
       .catch(err => {
