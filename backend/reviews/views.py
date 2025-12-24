@@ -18,6 +18,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
     methods=['GET'],
     parameters=[
         OpenApiParameter(name='book_id', type=int, location=OpenApiParameter.PATH),
+        OpenApiParameter(name='mine', type=bool, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='sort-field', type=str, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='page', type=int, location=OpenApiParameter.QUERY),
@@ -45,12 +46,22 @@ def list_and_create(request, book_id):
             book=book
         )
         return Response(
-            ReviewSerializer(review).data,
+            ReviewSerializer(review, context={"request": request}).data,
             status=status.HTTP_201_CREATED
         )
 
     # GET일 경우 리뷰 리스트 반환
     queryset = Review.objects.filter(book_id=book_id)
+    mine = request.query_params.get('mine')
+    if mine in ('true', 'True', '1'):
+        if not request.user.is_authenticated:
+            return Response({
+                "error": {
+                    "code": "requiresAuth",
+                    "message": "Authentication required."
+                }
+            }, status=HTTP_403_FORBIDDEN)
+        queryset = queryset.filter(user=request.user)
     sort_direction = request.query_params.get('sort-direction', 'desc')
     sort_field = request.query_params.get('sort-field', 'created_at')
 
@@ -76,7 +87,7 @@ def list_and_create(request, book_id):
         sort_field = 'like_count'
 
     page, paginator = apply_queryset_pagination(request, queryset, sort_field, sort_direction)
-    serializer = ReviewSerializer(page, many=True)
+    serializer = ReviewSerializer(page, many=True, context={"request": request})
 
     response = paginator.get_paginated_response(serializer.data)
     response.data["page_size"] = len(page)
@@ -118,7 +129,7 @@ def detail_and_update_and_delete(request, review_id):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
-            ReviewSerializer(review).data,
+            ReviewSerializer(review, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
     elif request.method == 'DELETE':
@@ -141,7 +152,7 @@ def detail_and_update_and_delete(request, review_id):
 
     if request.method == 'GET':
         return Response(
-            ReviewSerializer(review).data,
+            ReviewSerializer(review, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
 

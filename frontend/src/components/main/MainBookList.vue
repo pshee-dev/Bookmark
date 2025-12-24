@@ -7,28 +7,9 @@
   import { ref } from 'vue'
   import axios from 'axios'
 
-  const API_URL = import.meta.env.VITE_ALADIN_API_URL
-  const API_KEY = import.meta.env.VITE_ALADIN_API_KEY
   const bookList = ref([])
   
-  axios({
-    method: 'get',
-    url: `${API_URL}/ItemList.aspx`,
-    params: {
-      ttbkey: API_KEY,
-      QueryType: 'Bestseller',
-      SearchTarget: 'Book',
-      MaxResult: 12,
-      start: 1,
-      output: 'JS',
-      Version: 20131101,
-    },
-  })
-    .then(res => {
-      console.log(res.data)
-      bookList.value = res.data.item
-    })
-    .catch(err => console.log(err))
+  
   
 
 </script>

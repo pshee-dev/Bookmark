@@ -44,7 +44,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('full_name', 'profile_img', 'followings_count', 'followers_count')
+        fields = ('id', 'username', 'full_name', 'profile_img', 'followings_count', 'followers_count')
 
 
 # [Following/Follower List] 팔로잉/팔로워 리스트 조회 - GET

@@ -45,7 +45,7 @@ export const useLibraryStore = defineStore('library', () => {
 
     axios({
       method: 'get',
-      url: `${API_URL}/libraries/`,
+      url: `${API_URL}/api/v1/libraries/`,
       params: {
         status: status,
         'sort-direction': sortDirection,
@@ -81,7 +81,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/libraries/${libraryId}/`,
+        `${API_URL}/api/v1/libraries/${libraryId}/`,
         {
           headers: {
             Authorization: `Token ${token.value}`
@@ -100,7 +100,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = true
     try {
       const res = await axios.post(
-        `${API_URL}/libraries/`,
+        `${API_URL}/api/v1/libraries/`,
         {
           ...payload,
           book: bookId,
@@ -124,7 +124,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = true
     try {
       const res = await axios.patch(
-        `${API_URL}/libraries/${libraryId}/`,
+        `${API_URL}/api/v1/libraries/${libraryId}/`,
         payload,
         {
           headers: {
@@ -145,7 +145,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = true
     try {
       await axios.delete(
-        `${API_URL}/libraries/${libraryId}/`,
+        `${API_URL}/api/v1/libraries/${libraryId}/`,
         {
           headers: {
             Authorization: `Token ${token.value}`
@@ -206,6 +206,14 @@ export const useLibraryStore = defineStore('library', () => {
     closeLibraryModal,
     submitLibrary,
   }
+}, {
+  persist: [
+    {
+      key: 'libraries-local',
+      pick: ['libraryBook'],
+      storage: sessionStorage,
+    }
+  ]
 })
 
 

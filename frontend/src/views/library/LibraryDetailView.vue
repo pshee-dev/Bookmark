@@ -1,5 +1,5 @@
 ﻿<script setup>
-  import { computed, watch, onMounted } from 'vue'
+  import { computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useFeedStore } from '@/stores/feeds'
@@ -19,6 +19,9 @@
 
   const book = computed(() => libraryBook.value?.book ?? {})
 
+  const feedStore = useFeedStore()
+  const { galfyList, galfyCount, reviewList } = storeToRefs(feedStore)
+
   const statusLabel = computed(() => {
     const map = {
       reading: '읽고 있는 책',
@@ -26,6 +29,14 @@
       finished: '다 읽은 책',
     }
     return map[libraryBook.value?.status] ?? ''
+  })
+
+  const reviewId = computed(() => {
+    return reviewList.value?.[0]?.id ?? null
+  })
+
+  const hasReview = computed(() => {
+    return !!reviewId.value
   })
 
   const handleUpdateLibrary = () => {
@@ -58,26 +69,31 @@
     }
   }
 
-  const feedStore = useFeedStore()
-  const { galfyList, galfyCount } = storeToRefs(feedStore)
-
   const username = route.params.username
 
   const createReview = () => {
     // Todo: 리뷰 작성하기
+    router.push({name: 'reviewCreate', params: { username: username }})
   }
 
   const goReview = () => {
-    // Todo: 작성한 리뷰 상세보기
+    if (!reviewId.value) return
+    router.push({name: 'review', params: { username: username, reviewId: reviewId.value }})
   }
 
   const createGalfy = () => {
-    // Todo: 갈피 작성하기
+    router.push({name: 'galfyCreate', params: { username: username }})
   }
 
-  onMounted(() => {
-    feedStore.fetchGalfies(book.value.id)
-  })
+  watch(
+    () => book.value.id,
+    (id) => {
+      if (!id) return
+      feedStore.fetchGalfies(id, { mine: true })
+      feedStore.fetchReviews(id, { mine: true })
+    },
+    { immediate: true }
+  )
 </script>
 
 <template>
@@ -121,7 +137,7 @@
         <p v-if="libraryBook.current_page"><span class="cate">독서량</span> {{ libraryBook.current_page }}<span v-if="book.page">&nbsp;/ {{ book.page }}</span>&nbsp;페이지</p>
         <p>
           <span class="cate">리뷰</span> 
-          <template v-if="book.reviews?.length === 0">작성 전 <button @click="createReview" class="btn-review">리뷰 작성하기 ></button></template>
+          <template v-if="!hasReview">작성 전 <button @click="createReview" class="btn-review">리뷰 작성하기 ></button></template>
           <template v-else>작성 완료 <button @click="goReview" class="btn-review">리뷰 보러가기 ></button></template>
         </p>
       </div>
@@ -138,6 +154,9 @@
         <ul v-if="galfyCount !== 0">
           <li
             v-for="galfy in galfyList"
+            :key="galfy.id"
+            :ref="collect"
+            class="fadeinup80"
           >
             <FeedBase :feed-type="'galfy'" :feed="galfy"/>
           </li>
@@ -159,6 +178,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 30px;
   }
 
   .page-title {
