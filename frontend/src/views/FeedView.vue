@@ -17,7 +17,6 @@
         <li>
           <RouterLink
             :to="{ name: 'feedGalfyList' }"
-            class="tab-link"
             :class="{ 'router-link-active': activeTab === 'galfy' }"
           >
             갈피
@@ -26,7 +25,6 @@
         <li>
           <RouterLink
             :to="{ name: 'feedReviewList' }"
-            class="tab-link"
             :class="{ 'router-link-active': activeTab === 'review' }"
           >
             리뷰
@@ -42,16 +40,5 @@
 <style scoped>
   .feed-page {
     padding-bottom: 120px;
-  }
-
-  .tab-link {
-    width: 100%;
-    padding: 18px 0;
-    font-size: 20px;
-    color: #999;
-    font-weight: 400;
-    display: block;
-    position: relative;
-    text-decoration: none;
   }
 </style>
