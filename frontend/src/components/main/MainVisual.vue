@@ -22,7 +22,7 @@
   }
   const goLibrary = () => {
     if (!user.value?.username) return
-    router.push({name: 'libraries', params: {username: user.value.username}})
+    router.push({name: 'reading', params: {username: user.value.username}})
   }
 </script>
 

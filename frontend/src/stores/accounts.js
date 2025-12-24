@@ -1,17 +1,22 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRouter } from 'vue-router'
+import { useErrorStore } from './errors'
 import axios from 'axios'
 
 export const useAccountStore = defineStore('account', () => {
   const router = useRouter()
+  const errorStore = useErrorStore()
 
   const API_URL = import.meta.env.VITE_API_URL
   const token = ref(null)
   const user = ref(null) // 로그인 시 유저 정보 캐싱
   
-  const signupErrors = ref({})
-  
+  const signupErrors = ref({
+    username: [],
+    password1: [],
+    password2: [],
+  })  
 
   // 회원가입
   const signup = function (formData) {
@@ -30,10 +35,10 @@ export const useAccountStore = defineStore('account', () => {
         login({ username, password })
       })
       .catch(err => {
-        if (err.response && err.response.status === 400) {
-          signupErrors.value = err.response.data
+        if (err.response.data?.non_field_errors) {
+          errorStore.handleRequestError(err)
         } else {
-          console.error(err)
+          signupErrors.value = err.response.data
         }
       })
   }
@@ -55,7 +60,7 @@ export const useAccountStore = defineStore('account', () => {
         userInfo(token.value)
         router.push({ name: 'main' })
       })
-      .catch(err => console.log(err))
+      .catch(err => errorStore.handleRequestError(err))
   }
 
   // 유저 정보 캐싱
@@ -72,7 +77,7 @@ export const useAccountStore = defineStore('account', () => {
           name: res.data.full_name,
         }
       })
-      .catch(err => console.log(err))
+      .catch(err => errorStore.handleRequestError(err))
   }
 
   // 로그인 여부 확인
@@ -91,7 +96,7 @@ export const useAccountStore = defineStore('account', () => {
         user.value = null
         router.push({ name: 'login' })
       })
-      .catch(err => console.log(err))
+      .catch(err => errorStore.handleRequestError(err))
   }
 
   return {

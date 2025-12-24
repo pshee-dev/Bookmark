@@ -5,6 +5,8 @@ import { useErrorStore } from '@/stores/errors'
 import axios from 'axios'
 
 export const useFeedStore = defineStore('feed', () => {
+  const errorStore = useErrorStore()
+  
   const API_URL = import.meta.env.VITE_API_URL
   
   const galfyList = ref([])
@@ -34,7 +36,7 @@ export const useFeedStore = defineStore('feed', () => {
       galfyList.value = res.data.results
       galfyCount.value = res.data.count
     } catch (err) {
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
@@ -55,7 +57,7 @@ export const useFeedStore = defineStore('feed', () => {
       reviewList.value = res.data.results
       reviewCount.value = res.data.count
     } catch (err) {
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }

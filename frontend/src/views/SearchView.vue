@@ -4,6 +4,8 @@
   import { storeToRefs } from 'pinia'
   import SearchBook from '@/components/SearchBook.vue'
   import Loading from '@/components/Loading.vue'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+  const { collect } = useScrollReveal()
 
   const bookStore = useBookStore()
   const { searchBookList, searchType, searchKeyword, isLoading } = storeToRefs(bookStore)
@@ -18,7 +20,8 @@
         <li
           v-for="book in searchBookList"
           :key="book.id"
-          class="book"
+          class="book fadeinup80"
+          :ref="collect"
         >
           <SearchBook :book="book" />
         </li>
