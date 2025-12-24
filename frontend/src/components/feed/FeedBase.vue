@@ -82,17 +82,18 @@
 <style scoped>
 
   .feed-card {
-    background: linear-gradient(90deg, rgba(69, 106, 255, 0.05) 0%, rgba(163, 58, 255, 0.05) 100%);
+    background-color: #f8f5ff;
     padding: 30px 40px 50px;
     border-radius: 20px;
     transition-duration: .2s;
-    border: 2px solid transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     margin-bottom: 20px;
   }
 
   .feed-card:hover {
-    border: 2px solid #7830b7;
+    border-color: #d6ccf5;
+    transform: translateY(-2px);
   }
 
   .card-profile {

@@ -137,6 +137,12 @@ const router = createRouter({
         { path: 'review', name: 'userReviewList', component: () => import('@/components/UserReviewList.vue') },
       ],
     },
+    {
+      path: '/account/:username/edit',
+      name: 'userEdit',
+      component: () => import('@/views/UserEditView.vue'),
+      meta: { requiresAuth: true, ownerOnly: true },
+    },
   ],
 })
 
