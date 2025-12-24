@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, ref } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import FeedCreateBookInfo from '@/components/feed/FeedCreateBookInfo.vue'
   import { useFeedStore } from '@/stores/feeds'
@@ -9,10 +9,34 @@
   const libraryStore = useLibraryStore()
   const { libraryBook } = storeToRefs(libraryStore)
 
+  const props = defineProps({
+    mode: {
+      type: String,
+      default: 'create',
+    },
+    initialValue: {
+      type: Object,
+      default: null,
+    },
+  })
+
   const title = ref('')
   const content = ref('')
 
-  const bookId = computed(() => libraryBook.value?.book?.id ?? null)
+  const bookId = computed(() => {
+    return props.initialValue?.book?.id ?? libraryBook.value?.book?.id ?? null
+  })
+  const formBook = computed(() => props.initialValue?.book ?? null)
+
+  watch(
+    () => props.initialValue,
+    (nextValue) => {
+      if (!nextValue) return
+      title.value = nextValue.title ?? ''
+      content.value = nextValue.content ?? ''
+    },
+    { immediate: true }
+  )
 
   const handleCreateReview = async () => {
     const trimmedTitle = title.value.trim()
@@ -24,7 +48,9 @@
       content: trimmedContent,
     }
 
-    const created = await feedStore.createReview(bookId.value, payload)
+    const created = props.mode === 'update' && props.initialValue?.id
+      ? await feedStore.updateReview(props.initialValue.id, payload)
+      : await feedStore.createReview(bookId.value, payload)
     if (created) {
       title.value = ''
       content.value = ''
@@ -34,7 +60,7 @@
 
 <template>
   <form class="form" @submit.prevent="handleCreateReview">
-    <FeedCreateBookInfo />
+    <FeedCreateBookInfo :book="formBook" />
     <button class="btn btn-small" type="submit">저장</button>
 
     <div class="form-row">

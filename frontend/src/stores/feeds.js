@@ -104,6 +104,33 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
+  const updateGalfy = async (galfyId, payload) => {
+    if (!galfyId) return null
+    isLoading.value = true
+    try {
+      const res = await axios.patch(
+        `${API_URL}/galfies/${galfyId}/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`
+          }
+        }
+      )
+      const target = galfyList.value.find((item) => item.id === galfyId)
+      if (target) {
+        Object.assign(target, res.data)
+      }
+      router.back()
+      return res.data
+    } catch (err) {
+      errorStore.handleRequestError(err)
+      return null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const createReview = async (bookId, payload) => {
     if (!bookId) return null
     isLoading.value = true
@@ -119,6 +146,33 @@ export const useFeedStore = defineStore('feed', () => {
       )
       reviewList.value = [res.data, ...reviewList.value]
       reviewCount.value += 1
+      router.back()
+      return res.data
+    } catch (err) {
+      errorStore.handleRequestError(err)
+      return null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const updateReview = async (reviewId, payload) => {
+    if (!reviewId) return null
+    isLoading.value = true
+    try {
+      const res = await axios.patch(
+        `${API_URL}/reviews/${reviewId}/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`
+          }
+        }
+      )
+      const target = reviewList.value.find((item) => item.id === reviewId)
+      if (target) {
+        Object.assign(target, res.data)
+      }
       router.back()
       return res.data
     } catch (err) {
@@ -171,7 +225,9 @@ export const useFeedStore = defineStore('feed', () => {
     fetchGalfies,
     fetchReviews,
     createGalfy,
+    updateGalfy,
     createReview,
+    updateReview,
     actionLikes,
   }
 })

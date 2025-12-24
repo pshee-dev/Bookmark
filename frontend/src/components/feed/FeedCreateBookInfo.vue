@@ -5,23 +5,33 @@
   import { useScrollReveal } from '@/composables/scrollReveal'
   const { collect } = useScrollReveal()
 
+  const props = defineProps({
+    book: {
+      type: Object,
+      default: null,
+    },
+  })
+
   const libraryStore = useLibraryStore()
   const { libraryBook } = storeToRefs(libraryStore)
-  
+
+  const displayBook = computed(() => {
+    return props.book ?? libraryBook.value?.book ?? {}
+  })
 </script>
 
 <template>
   <div class="book-info">
     <div class="thumbnail fadein" :ref="collect">
-      <img v-if="libraryBook.book?.thumbnail" :src="libraryBook.book.thumbnail" :alt="libraryBook.book.title">
+      <img v-if="displayBook.thumbnail" :src="displayBook.thumbnail" :alt="displayBook.title">
       <img v-else src="@/assets/images/no_img_bookcover.jpg" alt="no-image">
     </div>
     <div class="info fadeinright80" :ref="collect">
-      <h3 class="title">{{ libraryBook.book.title }}</h3>
+      <h3 class="title">{{ displayBook.title }}</h3>
       <p>
-        <span v-if="libraryBook.book.author">{{ libraryBook.book.author }}</span>
-        <span v-if="libraryBook.book.author && libraryBook.book.publisher"> | </span>
-        <span v-if="libraryBook.book.publisher">{{ libraryBook.book.publisher }}</span>
+        <span v-if="displayBook.author">{{ displayBook.author }}</span>
+        <span v-if="displayBook.author && displayBook.publisher"> | </span>
+        <span v-if="displayBook.publisher">{{ displayBook.publisher }}</span>
       </p>
     </div>
   </div>

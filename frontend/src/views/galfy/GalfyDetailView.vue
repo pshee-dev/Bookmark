@@ -45,7 +45,7 @@
     if (!showFollowButton.value || !token.value) return
     try {
       const res = await axios.get(
-        `${API_URL}/accounts/${user.value.id}/followings/`,
+        `${API_URL}/users/${user.value.id}/followings/`,
         {
           headers: {
             Authorization: `Token ${token.value}`,
@@ -63,7 +63,7 @@
     if (!showFollowButton.value || !token.value) return
     try {
       const res = await axios.post(
-        `${API_URL}/accounts/${galfy.value.user.id}/follow/`,
+        `${API_URL}/users/${galfy.value.user.id}/follow/`,
         {},
         {
           headers: {
@@ -116,11 +116,41 @@
       galfy.value.is_liked = res.is_liked
     }
   }
+
+  const goUpdateGalfy = () => {
+    if (!galfy.value?.id || !galfy.value?.user?.username) return
+    router.push({ name: 'galfyUpdate', params: { username: galfy.value.user.username, galfyId: galfy.value.id } })
+  }
+
+  const deleteGalfy = async () => {
+    if (!galfy.value?.id) return
+    const confirmed = window.confirm('정말 삭제하시겠습니까?')
+    if (!confirmed) return
+    try {
+      await axios.delete(
+        `${API_URL}/galfies/${galfy.value.id}/`,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`
+          }
+        }
+      )
+      router.back()
+    } catch (err) {
+      errorStore.handleRequestError(err)
+    }
+  }
 </script>
 
 <template>
   <div class="bg-container">
-    <h1 class="page-title">{{ galfy?.user?.full_name }}님의 갈피</h1>
+    <div class="tit-wrap">
+      <h1 class="page-title">{{ galfy?.user?.full_name }}님의 갈피</h1>
+      <div class="btn-group" v-if="isOwner">
+        <button class="btn btn-small" @click="goUpdateGalfy">수정</button>
+        <button class="btn btn-small" @click="deleteGalfy">삭제</button>
+      </div>
+    </div>
     <div class="container-box">
       <div class="profile-section">
         <div class="profile-info">
@@ -137,7 +167,7 @@
           class="btn btn-small btn-follow"
           @click="toggleFollow"
         >
-          {{ isFollowing ? '팔로잉' : '팔로우' }}
+          {{ isFollowing ? '언팔로우' : '팔로우' }}
         </button>
       </div>
 
@@ -298,8 +328,25 @@
     gap: 8px;
   }
 
-  .action-txt {
-    font-size: 16px;
-    font-weight: 600;
-  }
+.action-txt {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tit-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.page-title {
+  margin: 0;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-right: 40px;
+}
 </style>

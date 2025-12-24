@@ -45,7 +45,7 @@
     if (!showFollowButton.value || !token.value) return
     try {
       const res = await axios.get(
-        `${API_URL}/accounts/${user.value.id}/followings/`,
+        `${API_URL}/users/${user.value.id}/followings/`,
         {
           headers: {
             Authorization: `Token ${token.value}`,
@@ -63,7 +63,7 @@
     if (!showFollowButton.value || !token.value) return
     try {
       const res = await axios.post(
-        `${API_URL}/accounts/${review.value.user.id}/follow/`,
+        `${API_URL}/users/${review.value.user.id}/follow/`,
         {},
         {
           headers: {
@@ -116,11 +116,41 @@
       review.value.is_liked = res.is_liked
     }
   }
+
+  const goUpdateReview = () => {
+    if (!review.value?.id || !review.value?.user?.username) return
+    router.push({ name: 'reviewUpdate', params: { username: review.value.user.username, reviewId: review.value.id } })
+  }
+
+  const deleteReview = async () => {
+    if (!review.value?.id) return
+    const confirmed = window.confirm('정말 삭제하시겠습니까?')
+    if (!confirmed) return
+    try {
+      await axios.delete(
+        `${API_URL}/reviews/${review.value.id}/`,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`
+          }
+        }
+      )
+      router.back()
+    } catch (err) {
+      errorStore.handleRequestError(err)
+    }
+  }
 </script>
 
 <template>
   <div class="bg-container">
-    <h1 class="page-title">{{ review?.user?.full_name }}님의 리뷰</h1>
+    <div class="tit-wrap">
+      <h1 class="page-title">{{ review?.user?.full_name }}님의 리뷰</h1>
+      <div class="btn-group" v-if="isOwner">
+        <button class="btn btn-small" @click="goUpdateReview">수정</button>
+        <button class="btn btn-small" @click="deleteReview">삭제</button>
+      </div>
+    </div>
     <div class="container-box">
       <div class="profile-section">
         <div class="profile-info">
@@ -173,6 +203,23 @@
 </template>
 
 <style scoped>
+  .tit-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+
+  .page-title {
+    margin: 0;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-right: 40px;
+  }
+
   .book-section {
     display: flex;
     align-items: center;
@@ -298,8 +345,24 @@
     gap: 8px;
   }
 
-  .action-txt {
-    font-size: 16px;
-    font-weight: 600;
-  }
+.action-txt {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tit-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.page-title {
+  margin: 0;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
 </style>
