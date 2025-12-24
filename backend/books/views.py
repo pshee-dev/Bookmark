@@ -214,6 +214,13 @@ def resolve_by_isbn(request):
     serializer.is_valid(raise_exception=True)
 
     book = serializer.save(category=book_info['category'])
+    try:
+        from recommendations.services.make_book_vector_pipeline_after_add_book import (
+            enqueue_book_vector_build,
+        )
+        enqueue_book_vector_build(book.id)
+    except Exception:
+        pass
 
     return Response(
         {"book_id": book.pk},

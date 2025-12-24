@@ -20,7 +20,7 @@ MODEL_CONFIG = {
         "dim": 1536,
     },
     "gms-openai::text-embedding-3-large": {
-        "persist_dir": os.path.join(VECTOR_DB_ROOT, "openai_large"),
+        "persist_dir": os.path.join(VECTOR_DB_ROOT, "openai_large_main"),
         "collection": "reviews_openai_large",
         "dim": 3072,
     },
