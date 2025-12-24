@@ -5,6 +5,7 @@
   import axios from 'axios'
   import { useAccountStore } from '@/stores/accounts'
   import { useErrorStore } from '@/stores/errors'
+  import Loading from '@/components/Loading.vue'
 
   const API_URL = import.meta.env.VITE_API_URL
   const fallbackProfile = new URL('@/assets/images/no_img_profile.png', import.meta.url).href
@@ -20,6 +21,10 @@
   const libraryCounts = ref({ reading: 0, want: 0, finished: 0 })
   const galfyCount = ref(0)
   const reviewCount = ref(0)
+  const isFollowModalOpen = ref(false)
+  const followType = ref('followings')
+  const followList = ref([])
+  const isFollowLoading = ref(false)
 
   const username = computed(() => route.params.username)
 
@@ -126,6 +131,41 @@
     router.push({ name: 'userEdit', params: { username: username.value } })
   }
 
+  const openFollowModal = async (type) => {
+    followType.value = type === 'followers' ? 'followers' : 'followings'
+    isFollowModalOpen.value = true
+    await fetchFollowList()
+  }
+
+  const closeFollowModal = () => {
+    isFollowModalOpen.value = false
+    followList.value = []
+  }
+
+  const fetchFollowList = async () => {
+    if (!user.value?.id || !token.value) return
+    isFollowLoading.value = true
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/v1/users/${user.value.id}/${followType.value}/`,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`,
+          },
+        }
+      )
+      followList.value = Array.isArray(res.data) ? res.data : []
+    } catch (err) {
+      if (err.response?.status === 404) {
+        followList.value = []
+      } else {
+        errorStore.handleRequestError(err)
+      }
+    } finally {
+      isFollowLoading.value = false
+    }
+  }
+
   onMounted(async () => {
     await fetchProfile()
     await Promise.all([
@@ -151,8 +191,16 @@
         <div class="profile-text">
           <h2 class="profile-title"><b>{{ displayName }}</b>님의 책갈피</h2>
           <ul class="profile-stats">
-            <li>팔로잉 <strong>{{ profile.followings_count ?? 0 }}</strong></li>
-            <li>팔로워 <strong>{{ profile.followers_count ?? 0 }}</strong></li>
+            <li>
+              <button class="stat-button" type="button" @click="openFollowModal('followings')">
+                팔로잉 <strong>{{ profile.followings_count ?? 0 }}</strong>
+              </button>
+            </li>
+            <li>
+              <button class="stat-button" type="button" @click="openFollowModal('followers')">
+                팔로워 <strong>{{ profile.followers_count ?? 0 }}</strong>
+              </button>
+            </li>
             <li>갈피 <strong>{{ galfyCount }}</strong></li>
             <li>리뷰 <strong>{{ reviewCount }}</strong></li>
           </ul>
@@ -199,6 +247,27 @@
       <RouterView />
     </div>
   </div>
+
+  <div v-if="isFollowModalOpen" class="modal-bg" @click.self="closeFollowModal">
+    <div class="modal follow-modal">
+      <div class="modal-header">
+        <h2 class="title">{{ followType === 'followers' ? '팔로워' : '팔로잉' }}</h2>
+        <button class="btn-close" type="button" @click="closeFollowModal">
+          <img src="@/assets/images/common/btn_close.png" alt="?? ??">
+        </button>
+      </div>
+      <div v-if="isFollowLoading" class="no-content"><Loading /></div>
+      <div v-else-if="followList.length === 0" class="no-content">팔로우 정보가 없습니다.</div>
+      <ul v-else class="follow-list">
+        <li v-for="item in followList" :key="item.id" class="follow-item">
+          <div class="profile-image small">
+            <img :src="resolveProfileUrl(item.profile_img)" :alt="item.full_name">
+          </div>
+          <p class="name f-pre">{{ item.full_name }}</p>
+        </li>
+      </ul>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -243,6 +312,7 @@
 
   .profile-stats {
     display: flex;
+    align-items: center;
     gap: 18px;
     color: #666;
     font-size: 16px;
@@ -251,6 +321,15 @@
   .profile-stats strong {
     color: #111;
     margin-left: 4px;
+  }
+
+  .stat-button {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    padding: 0;
+    cursor: pointer;
   }
 
   .btn-edit {
@@ -304,5 +383,34 @@
     display: block;
     position: relative;
     text-decoration: none;
+  }
+
+  .follow-modal {
+    width: 480px;
+  }
+
+  .follow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .follow-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .profile-image.small {
+    width: 44px;
+    height: 44px;
+  }
+
+  .name {
+    font-size: 16px;
+    font-weight: 600;
   }
 </style>
