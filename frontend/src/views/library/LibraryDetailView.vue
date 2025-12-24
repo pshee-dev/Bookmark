@@ -74,13 +74,17 @@
   }
 
   const createGalfy = () => {
-    // Todo: 갈피 작성하기
     router.push({name: 'galfyCreate', params: { username: username }})
   }
 
-  onMounted(() => {
-    feedStore.fetchGalfies(book.value.id)
-  })
+  watch(
+    () => book.value.id,
+    (id) => {
+      if (!id) return
+      feedStore.fetchGalfies(id, { mine: true })
+    },
+    { immediate: true }
+  )
 </script>
 
 <template>

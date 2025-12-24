@@ -25,17 +25,20 @@ export const useFeedStore = defineStore('feed', () => {
   const sortField = 'created_at'
   const pageSize = 10
 
-  const fetchGalfies = async (bookId) => {
+  const fetchGalfies = async (bookId, { mine = false } = {}) => {
     isLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/books/${bookId}/galfies/`, {
-          params: {
-            'sort-direction' : sordDirection,
-            'sort-field' : sortField,
-            page_size : pageSize,
-          }
-        }
+        `${API_URL}/books/${bookId}/galfies/`, 
+        {                                                                                            
+          params: {                                                                                  
+            'sort-direction': sordDirection,                                                         
+            'sort-field': sortField,                                                                 
+            page_size: pageSize,                                                                     
+            ...(mine ? { mine: true } : {}),                                                         
+          },                                                                                         
+          ...(mine ? { headers: { Authorization: `Token ${token.value}` } } : {}),                   
+        } 
       )
       galfyList.value = res.data.results
       galfyCount.value = res.data.count
@@ -82,7 +85,7 @@ export const useFeedStore = defineStore('feed', () => {
       )
       galfyList.value = [res.data, ...galfyList.value]
       galfyCount.value += 1
-      router.push({name: 'galfy', params: { username: user?.value.username, galfyId: res.data.id }})
+      router.back()
       return res.data
     } catch (err) {
       errorStore.handleRequestError(err)

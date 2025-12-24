@@ -18,6 +18,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
     methods=['GET'],
     parameters=[
         OpenApiParameter(name='book_id', type=int, location=OpenApiParameter.PATH),
+        OpenApiParameter(name='mine', type=bool, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='sort-field', type=str, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='page', type=int, location=OpenApiParameter.QUERY),
@@ -50,7 +51,17 @@ def list_and_create(request, book_id):
         )
 
     if request.method == 'GET':
-        queryset = Galfy.objects.all()
+        queryset = Galfy.objects.filter(book_id=book_id)
+        mine = request.query_params.get('mine')
+        if mine in ('true', 'True', '1'):
+            if not request.user.is_authenticated:
+                return Response({
+                    "error": {
+                        "code": "requiresAuth",
+                        "message": "Authentication required."
+                    }
+                }, status=HTTP_403_FORBIDDEN)
+            queryset = queryset.filter(user=request.user)
         sort_direction = request.query_params.get('sort-direction', 'desc')
         sort_field = request.query_params.get('sort-field', 'popularity')
 
