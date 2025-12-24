@@ -13,4 +13,5 @@ urlpatterns = [
     path('<int:book_id>/reviews/', review_list_and_create, name='review_list_and_create'),
     path('<int:book_id>/galfies/', galfy_list_and_create, name='galfy_list_and_create'),
     path('<int:book_id>/', views.detail, name='detail'),
+    path('', views.book_list), # 메인페이지 슬라이드 도서 목록 조회
 ]

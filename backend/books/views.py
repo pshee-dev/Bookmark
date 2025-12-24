@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from common.utils.paginations import apply_queryset_pagination
 
 from .models import Book
-from .serializers import BookSerializer, BookListSerializer, ISBNResolveSerializer
+from .serializers import BookSerializer, BookListSerializer, ISBNResolveSerializer, BookSummarySerializer
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
@@ -220,4 +221,32 @@ def resolve_by_isbn(request):
         status=status.HTTP_201_CREATED
     )
 
+# 메인페이지 슬라이드 도서 목록 조회
+@extend_schema(
+    tags=["Books"],
+    summary="Book list",
+    description="Retrieve book list with pagination.",
+    parameters=[
+        OpenApiParameter(name="page", description="page number", required=False, type=int),
+        OpenApiParameter(name="page_size", description="page size override", required=False, type=int),
+        OpenApiParameter(name="sort-field", description="sort field (created_at)", required=False, type=str),
+        OpenApiParameter(name="sort-direction", description="sort direction (asc | desc)", required=False, type=str),
+    ],
+    responses={200: BookSummarySerializer(many=True)},
+)
+@api_view(['GET'])
+def book_list(request):
+    books = Book.objects.all()
+    sort_direction = request.query_params.get('sort-direction', 'desc')
+    sort_field = request.query_params.get('sort-field', 'created_at')
 
+    if sort_field not in ('created_at', 'id'):
+        sort_field = 'id'
+    if sort_direction not in ('asc', 'desc'):
+        sort_direction = 'desc'
+
+    page, paginator = apply_queryset_pagination(request, books, sort_field, sort_direction)
+    serializer = BookSummarySerializer(page, many=True)
+    response = paginator.get_paginated_response(serializer.data)
+    response.data["page_size"] = len(page)
+    return response
