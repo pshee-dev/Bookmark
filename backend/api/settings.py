@@ -153,7 +153,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"     # collectstatic 결과물 저장 폴�
 
 # 동적파일을 저장할 폴더 경로 지정
 MEDIA_ROOT = BASE_DIR / 'media'
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 
 
 # Default primary key field type
