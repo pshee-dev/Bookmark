@@ -2,6 +2,8 @@
 import json
 import os
 import random
+import re
+from datetime import datetime
 
 import requests
 
@@ -18,13 +20,11 @@ from recommendations.services.make_book_vector_pipeline_after_add_book import (
     PrecomputedEmbedding,
 )
 from recommendations.my_source.embeddings import make_embeddings
-from recommendations.my_source.summary.summarizer.summarize_user_reviews import (
-    summarize_user_reviews,
-)
 from reviews.models import Review
 
 GMS_OPENAI_CHAT_URL = "https://gms.ssafy.io/gmsapi/api.openai.com/v1/chat/completions"
 GMS_LLM_MODEL = "gpt-4o-mini"
+LLM_RAW_LOG_PATH = os.path.join(os.path.dirname(__file__), "llm_raw.log")
 
 
 @api_view(["GET"])
@@ -53,10 +53,11 @@ def recommend_book(request, review_id):
     results = vectordb._collection.query(
         query_embeddings=[review_emb],
         n_results=10,
-        include=["metadatas"],
+        include=["metadatas", "documents"],
     )
 
     metadatas = (results.get("metadatas") or [[]])[0]
+    documents = (results.get("documents") or [[]])[0]
     isbns = []
     for md in metadatas:
         isbn = str(md.get("isbn13", "")).strip()
@@ -73,28 +74,15 @@ def recommend_book(request, review_id):
         many=True,
     ).data
 
-    summary_text = ""
-    keywords = []
-    try:
-        summary = summarize_user_reviews([review_text])
-        summary_text = str(summary.get("summary", "")).strip()
-        keywords = _expand_keywords([
-                                        k.strip()
-                                        for k in str(summary.get("keywords", "")).split(",")
-                                        if k.strip()
-                                    ][:5])
-    except Exception:
-        keywords = []
+    keyword_texts = [review_text] + [doc for doc in documents if doc]
+    keywords = _extract_keywords_from_lexicon(keyword_texts, max_keywords=5)
+    if not keywords:
+        keywords = _extract_keywords_with_llm(keyword_texts, max_keywords=5)
+    if not keywords:
+        keywords = _extract_keywords(keyword_texts, max_keywords=5)
 
-    for book in books:
-        category_id = (book.get("category") or {}).get("id")
-        book["reason"] = _build_reason_for_book(category_id, keywords)
-
-    refined_reasons = _refine_reasons_with_llm(books, keywords, summary_text)
-    if refined_reasons:
-        for book, refined in zip(books, refined_reasons):
-            if refined:
-                book["reason"] = refined
+    for idx, book in enumerate(books):
+        book["reason"] = _build_reason_for_book(book, review.book, keywords, idx)
 
     return Response(
         {
@@ -110,6 +98,168 @@ def _make_review_text(title: str | None, content: str | None) -> str:
     parts = [str(x).strip() for x in [title, content] if x and str(x).strip()]
     return " ".join(parts).strip()
 
+
+def _build_reason_draft(category_name: str, keywords: list[str], review_summary: str) -> str:
+    parts = []
+    if category_name:
+        parts.append(f"category: {category_name}")
+    if keywords:
+        parts.append(f"keywords: {', '.join(keywords[:5])}")
+    if review_summary:
+        parts.append(f"review_summary: {review_summary[:200]}")
+    return " | ".join(parts)
+
+
+def _extract_keywords(texts: list[str], max_keywords: int = 5) -> list[str]:
+    if not texts:
+        return []
+
+    stopwords = {
+        "그리고", "하지만", "그래서", "그런데", "정말", "너무", "조금", "그냥", "이런",
+        "저런", "이것", "저것", "그거", "이거", "책", "작품", "이야기", "문장", "내용",
+        "느낌", "생각", "사건", "사람", "마음", "독자", "작가", "시선", "부분", "장면",
+        "읽다", "읽고", "읽는", "읽었다", "있다", "없다", "하다", "된다", "처럼", "때문",
+    }
+
+    unigram_counts: dict[str, int] = {}
+    bigram_counts: dict[str, int] = {}
+
+    for text in texts:
+        cleaned = re.sub(r"[^0-9a-zA-Z가-힣\s]", " ", str(text))
+        tokens = [t.strip() for t in cleaned.split() if t.strip()]
+        tokens = [t for t in tokens if len(t) >= 2 and t not in stopwords]
+
+        for token in tokens:
+            unigram_counts[token] = unigram_counts.get(token, 0) + 1
+        for a, b in zip(tokens, tokens[1:]):
+            if a in stopwords or b in stopwords:
+                continue
+            bigram = f"{a} {b}"
+            bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
+
+    candidates: list[tuple[str, float]] = []
+    for term, count in bigram_counts.items():
+        candidates.append((term, count * 3.0))
+    for term, count in unigram_counts.items():
+        candidates.append((term, count * 1.5))
+
+    candidates.sort(key=lambda x: (-x[1], -len(x[0])))
+
+    seen = set()
+    keywords: list[str] = []
+    for term, _score in candidates:
+        if term in seen:
+            continue
+        seen.add(term)
+        keywords.append(term)
+        if len(keywords) >= max_keywords:
+            break
+
+    return keywords
+
+
+def _extract_keywords_from_lexicon(texts: list[str], max_keywords: int = 5) -> list[str]:
+    joined = " ".join([str(t) for t in texts if t]).strip()
+    if not joined:
+        return []
+
+    lexicon = [
+        (r"(역사|역사의|역사적|근현대|현대사|사건|항쟁|민주화|학살|참사|전쟁|분단|독재|군사정권|광주)", "역사적 사건"),
+        (r"(아픔|상처|비극|슬픔|고통|상흔|트라우마)", "아픔의 기억"),
+        (r"(기억|회상|되새김|잊지|추모|기억하는)", "아픔의 기억"),
+        (r"(무거운|묵직한|암울한|침울한|음울한|비장한)", "무거운 분위기"),
+        (r"(분노|격정|분개|억울함)", "분노"),
+        (r"(슬픔|애도|눈물|비애)", "슬픔"),
+        (r"(소년|아이|청소년)", "소년"),
+        (r"(잔인|폭력|비정)", "잔인함"),
+        (r"(여운|잔상|오래 남)", "여운"),
+        (r"(기억|추억)", "기억"),
+    ]
+
+    found = []
+    seen = set()
+    for pattern, keyword in lexicon:
+        if keyword in seen:
+            continue
+        if re.search(pattern, joined):
+            found.append(keyword)
+            seen.add(keyword)
+        if len(found) >= max_keywords:
+            break
+
+    return found[:max_keywords]
+
+
+def _extract_keywords_with_llm(texts: list[str], max_keywords: int = 5) -> list[str]:
+    api_key = os.getenv("GMS_KEY")
+    if not api_key:
+        return []
+
+    context = _make_context_snippet(texts, max_chars=2000)
+    if not context:
+        return []
+
+    prompt = (
+        "Extract 3-5 concise Korean keyphrases from the text.\n"
+        "Use only information present in the text.\n"
+        "Return only a JSON array of strings, no extra text.\n"
+        "Keyphrases should be 2-6 words and meaningful for recommendation reasons.\n"
+        "TEXT:\n"
+        f"{context}"
+    )
+
+    payload = {
+        "model": GMS_LLM_MODEL,
+        "messages": [
+            {"role": "developer", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.2,
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    try:
+        r = requests.post(
+            GMS_OPENAI_CHAT_URL,
+            headers=headers,
+            json=payload,
+            timeout=120,
+        )
+        r.raise_for_status()
+        content = r.json()["choices"][0]["message"]["content"].strip()
+    except Exception:
+        return []
+
+    keywords = _parse_llm_json_array(content)
+    if not keywords:
+        return []
+
+    cleaned = []
+    for keyword in keywords:
+        if isinstance(keyword, str):
+            kw = keyword.strip()
+            if kw:
+                cleaned.append(kw)
+    return cleaned[:max_keywords]
+
+
+def _make_context_snippet(texts: list[str], max_chars: int = 800) -> str:
+    buf = []
+    total = 0
+    for text in texts:
+        t = str(text).strip()
+        if not t:
+            continue
+        remaining = max_chars - total
+        if remaining <= 0:
+            break
+        buf.append(t[:remaining])
+        total += len(buf[-1])
+        if total >= max_chars:
+            break
+    return " ".join(buf)
 
 def _build_reason(keywords: list[str]) -> str:
     if not keywords:
@@ -218,17 +368,23 @@ def _refine_reasons_with_llm(
 
     payload_data = {
         "keywords": keywords[:5],
-        "review_summary": review_summary or "",
+        "review_context": review_summary or "",
         "items": items,
     }
 
     prompt = (
         "Rewrite each reason_draft to be more natural and readable in Korean.\n"
         "Return only a JSON array of strings, same length and order as items.\n"
+        "Do not include code fences, explanations, or extra text.\n"
         "Rules:\n"
-        "- Keep 1-2 sentences per item (about 80-140 chars).\n"
-        "- Keep a polite tone.\n"
+        "- Output exactly one sentence per item (about 60-120 chars).\n"
+        "- Use a warm and considerate tone.\n"
         "- Do not add new facts beyond the provided data.\n"
+        "- Focus on connecting the user's review (keywords/context) to the recommendation.\n"
+        "- Include at least one keyword from the user's review verbatim in each item.\n"
+        "- Avoid generic book-description tone; keep it user-centric.\n"
+        "- Do not mention title or author.\n"
+        "- Make each item distinct; do not repeat the same sentence across items.\n"
         "- If reason_draft is empty, return an empty string for that item.\n"
         "DATA:\n"
         f"{json.dumps(payload_data, ensure_ascii=True)}"
@@ -256,20 +412,97 @@ def _refine_reasons_with_llm(
         r.raise_for_status()
         content = r.json()["choices"][0]["message"]["content"].strip()
     except Exception:
+        print("[recommendations] LLM request failed")
+        return None
+    _append_llm_raw_log(content)
+
+    reasons = _parse_llm_json_array(content)
+    if reasons is None:
+        print("[recommendations] LLM response parse failed:", content[:500])
+        return None
+
+    if not isinstance(reasons, list):
+        return None
+    if len(reasons) < len(books):
+        reasons = reasons + ([""] * (len(books) - len(reasons)))
+    if len(reasons) > len(books):
+        reasons = reasons[: len(books)]
+
+    cleaned = []
+    for book, reason in zip(books, reasons):
+        if not isinstance(reason, str):
+            cleaned.append("")
+            continue
+        candidate = reason.strip()
+        cleaned.append(
+            candidate
+            if _is_reason_safe(candidate, book) and _has_keyword(candidate, keywords)
+            else ""
+        )
+    return cleaned
+
+
+def _parse_llm_json_array(content: str) -> list[str] | None:
+    if not content:
         return None
 
     try:
-        reasons = json.loads(content)
+        parsed = json.loads(content)
+        return parsed if isinstance(parsed, list) else None
+    except Exception:
+        pass
+
+    # Try to extract a JSON array from surrounding text or code fences.
+    start = content.find("[")
+    end = content.rfind("]")
+    if start == -1 or end == -1 or end <= start:
+        return None
+
+    try:
+        parsed = json.loads(content[start : end + 1])
     except Exception:
         return None
 
-    if not isinstance(reasons, list) or len(reasons) != len(books):
-        return None
+    return parsed if isinstance(parsed, list) else None
 
-    cleaned = []
-    for reason in reasons:
-        cleaned.append(reason.strip() if isinstance(reason, str) else "")
-    return cleaned
+
+def _is_reason_safe(reason: str, book: dict) -> bool:
+    if not reason:
+        return False
+
+    forbidden_markers = ["제목", "저자", "title:", "author:"]
+    if any(marker in reason for marker in forbidden_markers):
+        return False
+
+    title = str(book.get("title", "")).strip()
+    author = str(book.get("author", "")).strip()
+    if title and title in reason:
+        return False
+    if author and author in reason:
+        return False
+
+    return True
+
+
+def _has_keyword(reason: str, keywords: list[str]) -> bool:
+    if not reason:
+        return False
+    for keyword in keywords:
+        if keyword and keyword in reason:
+            return True
+    return False
+
+
+def _append_llm_raw_log(content: str) -> None:
+    if content is None:
+        return
+    try:
+        with open(LLM_RAW_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"\n--- {datetime.now().isoformat()} ---\n")
+            f.write(content)
+            f.write("\n")
+    except Exception:
+        pass
 
 
 def _join_with_particle(word: str, tail: str, with_final: str, without_final: str) -> str:
@@ -297,10 +530,75 @@ def _ordered_books_by_isbn(isbns):
     return [by_isbn[i] for i in isbns if i in by_isbn]
 
 
-def _build_reason_for_book(category_id: int | None, keywords: list[str]) -> str:
-    if category_id in CATEGORY_ID_TO_TEMPLATES:
-        return random.choice(CATEGORY_ID_TO_TEMPLATES[category_id])
-    return _build_reason(keywords)
+def _fixed_reason_for_book(book: dict, review_book, keywords: list[str]) -> str | None:
+    review_author = _normalize_author(getattr(review_book, "author", ""))
+    book_author = _normalize_author(str(book.get("author", "")))
+
+    if review_author and book_author and review_author == book_author:
+        return "같은 작가의 다른 작품이에요."
+
+    return None
+
+
+def _build_reason_for_book(
+    book: dict,
+    review_book,
+    keywords: list[str],
+    index: int,
+) -> str:
+    fixed_reason = _fixed_reason_for_book(book, review_book, keywords)
+    if fixed_reason:
+        return fixed_reason
+
+    keyword_reason = _reason_from_keywords(_rotate_keywords(keywords, index))
+    if keyword_reason:
+        return keyword_reason
+
+    if keywords:
+        return f"리뷰에서 느낀 '{keywords[index % len(keywords)]}' 분위기와 잘 맞는 책이에요."
+
+    return "리뷰 분위기와 잘 맞는 책이에요."
+
+
+def _rotate_keywords(keywords: list[str], index: int) -> list[str]:
+    if not keywords:
+        return []
+    if index <= 0:
+        return keywords
+    pivot = index % len(keywords)
+    return keywords[pivot:] + keywords[:pivot]
+
+
+def _normalize_author(name: str) -> str:
+    if not name:
+        return ""
+    name = re.sub(r"\(.*?\)", "", name)
+    name = re.sub(r"\s+", "", name)
+    return name.strip()
+
+
+def _reason_from_keywords(keywords: list[str]) -> str | None:
+    if not keywords:
+        return None
+
+    keyword_map = {
+        "역사적 사건": "아픈 역사적 사건을 담담한 문체로 풀어냈어요.",
+        "아픔의 기억": "아픔의 기억을 조용히 들여다보는 책이에요.",
+        "무거운 분위기": "무거운 분위기를 끝까지 놓지 않고 이어가요.",
+        "기억": "기억을 곱씹게 되는 책이에요.",
+        "슬픔": "슬픔의 결을 차분히 따라가는 책이에요.",
+        "분노": "분노의 감정을 절제된 문장으로 담아냈어요.",
+        "소년": "소년의 시선과 정서를 떠올리게 해요.",
+        "잔인함": "잔인한 현실을 담담하게 비추는 책이에요.",
+        "감정": "감정의 흐름을 섬세하게 따라가요.",
+        "여운": "읽고 난 뒤 여운이 오래 남는 책이에요.",
+    }
+
+    for keyword in keywords:
+        if keyword in keyword_map:
+            return keyword_map[keyword]
+
+    return None
 
 
 LITERATURE_TEMPLATES = [
