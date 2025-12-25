@@ -7,6 +7,7 @@
   import { useErrorStore } from '@/stores/errors'
   import { useCommentStore } from '@/stores/comments'
   import FeedBase from '@/components/feed/FeedBase.vue'
+  import Loading from '@/components/Loading.vue'
 
   const API_URL = import.meta.env.VITE_API_URL
 
@@ -116,7 +117,9 @@
   <div class="tab-body">
     <h4 class="count-title">작성된 리뷰 <strong>{{ reviewCount }}</strong>개</h4>
 
-    <div v-if="isLoading && reviewList.length === 0" class="no-content">로딩중</div>
+    <div v-if="isLoading && reviewList.length === 0" class="no-content">
+      <Loading />
+    </div>
     <div v-else-if="reviewList.length === 0" class="no-content">작성된 리뷰가 없습니다.</div>
 
     <ul v-else class="post-list">

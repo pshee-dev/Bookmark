@@ -1,5 +1,5 @@
 <script setup>
-  import { onMounted, ref, watch } from 'vue'
+  import { nextTick, onMounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import axios from 'axios'
@@ -10,6 +10,9 @@
   import iconLike from '@/assets/images/common/icon_like.png'
   import iconLikeActive from '@/assets/images/common/icon_likes_active.png'
   import Loading from '../Loading.vue'
+  import { useScrollReveal } from '@/composables/scrollReveal'
+
+  const { collect, refresh } = useScrollReveal()
 
   const API_URL = import.meta.env.VITE_API_URL
   const fallbackProfile = new URL('@/assets/images/no_img_profile.png', import.meta.url).href
@@ -61,6 +64,8 @@
         }
       )
       popularFeeds.value = res.data?.results ?? []
+      await nextTick()
+      refresh()
     } catch (err) {
       errorStore.handleRequestError(err)
     } finally {
@@ -122,8 +127,8 @@
 <template>
   <section class="main-feed main-section">
     <div class="tit-wrap">
-      <h1 class="page-title">인기 피드</h1>
-      <RouterLink class="btn-link" :to="{ name: 'feed' }">바로가기 →</RouterLink>
+      <h1 class="page-title fadeinup80" :ref="collect">인기 피드</h1>
+      <RouterLink class="btn-link fadeinleft" :ref="collect" :to="{ name: 'feed' }">바로가기 →</RouterLink>
     </div>
 
     <div v-if="isLoading" class="no-content"><Loading /></div>
@@ -132,7 +137,8 @@
       <li
         v-for="item in popularFeeds"
         :key="item.id"
-        class="feed-card"
+        class="feed-card fadein"
+        :ref="collect"
         @click.stop="goDetail(item)"
       >
         <div class="card-header">
@@ -176,7 +182,6 @@
             </div>
           </div>
         </div>
-
 
         <div class="actions">
           <button class="btn-action" type="button" @click.stop="toggleLike(item)">
@@ -392,6 +397,10 @@
   .btn-action img {
     width: 25px;
     height: 25px;
+  }
+
+  .fadein.show {
+    animation-delay: .2s;
   }
 
   @media (max-width: 1200px) {
