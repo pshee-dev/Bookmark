@@ -56,12 +56,13 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 
 .tab-menu li a {
   width: 100%;
-  padding: 20px 0;
-  font-size: 24px;
+  padding: 18px 0;
+  font-size: 20px;
   color: #999;
   font-weight: 400;
   display: block;
   position: relative;
+  text-decoration: none;
 }
 
 .tab-menu li a.router-link-active {
