@@ -19,7 +19,7 @@ INSERT INTO books_category (id, name) VALUES (18, '예술/대중문화');
 INSERT INTO books_category (id, name) VALUES (19, '외국어');
 INSERT INTO books_category (id, name) VALUES (20, '유아');
 INSERT INTO books_category (id, name) VALUES (21, '인문학');
-INSERT INTO books_category (id, name) VALUES (22, '일본 도서/기타');
+INSERT INTO books_category (id, name) VALUES (22, '기타');
 INSERT INTO books_category (id, name) VALUES (23, '자기계발');
 INSERT INTO books_category (id, name) VALUES (24, '잡지');
 INSERT INTO books_category (id, name) VALUES (25, '장르소설');

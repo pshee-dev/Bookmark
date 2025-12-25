@@ -1,8 +1,10 @@
 asgiref==3.11.0
 attrs==25.4.0
+beautifulsoup4==4.14.3
 certifi==2025.11.12
 cffi==2.0.0
 charset-normalizer==3.4.4
+chromadb==1.4.0
 cryptography==46.0.3
 dj-rest-auth==7.0.1
 Django==5.2.9
@@ -16,7 +18,11 @@ idna==3.11
 inflection==0.5.1
 jsonschema==4.25.1
 jsonschema-specifications==2025.9.1
+langchain-community==0.4.1
+langchain-core==1.2.5
+numpy==2.4.0
 oauthlib==3.3.1
+pandas==2.3.3
 pillow==12.0.0
 pycparser==2.23
 PyJWT==2.10.1
@@ -26,7 +32,10 @@ referencing==0.37.0
 requests==2.32.5
 requests-oauthlib==2.0.0
 rpds-py==0.30.0
+selenium==4.39.0
 sqlparse==0.5.4
+tqdm==4.67.1
 tzdata==2025.2
 uritemplate==4.2.0
-urllib3==2.6.1
+urllib3==2.6.2
+webdriver-manager==4.0.2
