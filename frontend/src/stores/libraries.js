@@ -17,7 +17,7 @@ export const useLibraryStore = defineStore('library', () => {
   const libraryBookList = ref([])
   const sortDirection = 'desc'
   const sortType = 'created_at'
-  const limit = 2 // Todo: 기본 값 10으로 돌려놓기
+  const limit = 10
   const offset = ref(0)
   const hasMore = ref(true)
   const currentStatus = ref(null)

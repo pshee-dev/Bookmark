@@ -23,7 +23,7 @@
       <li
         v-for="review in reviewList"
       >
-        <FeedBase :feed-type="'review'" :feed="review" />
+        <FeedBase :feed-type="'review'" :feed="review" :show-profile="true" :show-book-info="false" />
       </li>
     </ul>
     <div v-else class="no-content">작성된 리뷰가 없습니다.</div>

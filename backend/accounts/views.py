@@ -203,6 +203,48 @@ def get_feed(request, user_id):
     page, paginator = apply_list_pagination(request, serialized_feed, "page")
     return paginator.get_paginated_response(page)
 
+@extend_schema(
+    tags=["Feed"],
+    summary="전체 피드 조회",
+    description="""
+    모든 유저의 리뷰/갈피를 최신순으로 반환합니다.
+    """,
+    parameters=[
+        OpenApiParameter("type", str, description="galfy | review | all"),
+        OpenApiParameter("page", int, description="page number"),
+        OpenApiParameter("page_size", int, description="page size override"),
+    ],
+)
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def get_global_feed(request):
+    feed_type = request.query_params.get('type', 'all')
+
+    if feed_type == 'galfy':
+        queryset = Galfy.objects.all()
+        page, paginator = apply_queryset_pagination(request, queryset, 'created_at', 'desc')
+        serializer = GalfySerializer(page, many=True, context={"request": request})
+        return paginator.get_paginated_response(serializer.data)
+
+    if feed_type == 'review':
+        queryset = Review.objects.all()
+        page, paginator = apply_queryset_pagination(request, queryset, 'created_at', 'desc')
+        serializer = ReviewSerializer(page, many=True, context={"request": request})
+        return paginator.get_paginated_response(serializer.data)
+
+    reviews = Review.objects.all()
+    galfies = Galfy.objects.all()
+    feed = list(chain(reviews, galfies))
+    feed.sort(key=lambda x: x.created_at, reverse=True)
+
+    serialized_feed = [
+        find_serializer_feed_item(obj, request=request).data
+        for obj in feed
+    ]
+
+    page, paginator = apply_list_pagination(request, serialized_feed, "page")
+    return paginator.get_paginated_response(page)
+
 def validate_query(sort_field, sort_direction):
     if sort_field not in ('created_at',):
         raise InvalidQuery(dev_message="옳지 않은 sort_field 쿼리 파라미터입니다.")
