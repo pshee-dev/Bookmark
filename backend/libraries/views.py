@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_list_or_404, get_object_or_404
+from django.contrib.auth import get_user_model
 
 from books.serializers import BookSerializer, BookWithReviewAndGalfiesSerializer
 from reviews.models import Review
@@ -20,6 +21,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
         OpenApiParameter(name='sort-direction', type=str, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='limit', type=int, location=OpenApiParameter.QUERY),
         OpenApiParameter(name='offset', type=int, location=OpenApiParameter.QUERY),
+        OpenApiParameter(name='username', type=str, location=OpenApiParameter.QUERY),
     ],
     responses=LibraryBookListSerializer(many=True),
     tags=['libraries'],
@@ -39,7 +41,14 @@ def library_book_list(request):
         reading_status = request.query_params.get('status', Library.StatusEnum.reading.value)
         if reading_status not in Library.StatusEnum.values:
             reading_status = Library.StatusEnum.reading.value
-        libraries = Library.objects.filter(user=request.user, status=reading_status)
+        # [username] username 파라미터에 의해 유저정보 필터링
+        username = request.query_params.get('username')
+        if username:
+            User = get_user_model()
+            target_user = get_object_or_404(User, username=username)
+        else:
+            target_user = request.user
+        libraries = Library.objects.filter(user=target_user, status=reading_status)
         print(libraries.count())
         # [sort] 정렬 관련 파라미터에 의해 쿼리셋 정렬
         '''

@@ -63,13 +63,14 @@
   }
 
   const fetchLibraryCount = async (statusKey) => {
-    if (!token.value) return
+    if (!token.value || !username.value) return
     try {
       const res = await axios.get(
         `${API_URL}/api/v1/libraries/`,
         {
           params: {
             status: statusKey,
+            username: username.value,
             limit: 1,
             offset: 0,
             'sort-direction': 'desc',
