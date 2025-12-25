@@ -1,4 +1,4 @@
-import { onUnmounted } from 'vue'
+import { onUnmounted, onMounted, nextTick } from 'vue'
 import { gsap } from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 
@@ -8,6 +8,10 @@ export function useScrollReveal() {
   // DOM 요소 → ScrollTrigger 인스턴스 1:1 매핑
   const triggers = new Map()
 
+  const refresh = () => {
+    requestAnimationFrame(() => ScrollTrigger.refresh())
+  }
+
   const collect = (el) => {
     // el이 null 이거나 이미 처리된 요소인 경우 무시
     if (!el || triggers.has(el)) return
@@ -15,8 +19,10 @@ export function useScrollReveal() {
     const trigger = ScrollTrigger.create({
       trigger: el,
       start: 'top 90%', // 요소의 시작점이 화면의 90%에 도달했을 때
-      onEnter: () => el.classList.add('show'), // .show 클래스 추가
-      once: true,
+      toggleClass: { targets: el, className: 'show' },
+      // onEnter: () => el.classList.add('show'), // .show 클래스 추가
+      // onEnterBack: () => {},
+      // once: true,
     })
 
     // 매핑 저장
@@ -29,5 +35,10 @@ export function useScrollReveal() {
     triggers.clear()
   })
 
-  return { collect }
+  onMounted(async () => {
+    await nextTick()
+    refresh()
+  })
+
+  return { collect, refresh }
 }

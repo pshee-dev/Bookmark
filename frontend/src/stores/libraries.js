@@ -32,7 +32,7 @@ export const useLibraryStore = defineStore('library', () => {
   const modalLibraryId = ref(null)
   const modalInitialValue = ref(null)
 
-  const fetchBookList = (status, { append = false } = {}) => {
+  const fetchBookList = (status, { append = false, limit: limitOverride } = {}) => {
     if (isLoading.value) return
     if (append && !hasMore.value) return
 
@@ -43,6 +43,7 @@ export const useLibraryStore = defineStore('library', () => {
     }
     isLoading.value = true
 
+    const effectiveLimit = Number.isFinite(limitOverride) ? limitOverride : limit
     axios({
       method: 'get',
       url: `${API_URL}/api/v1/libraries/`,
@@ -50,7 +51,7 @@ export const useLibraryStore = defineStore('library', () => {
         status: status,
         'sort-direction': sortDirection,
         'sort-type': sortType,
-        limit: limit,
+        limit: effectiveLimit,
         offset: offset.value,
       },
       headers: {
@@ -209,7 +210,7 @@ export const useLibraryStore = defineStore('library', () => {
 }, {
   persist: [
     {
-      key: 'libraries-local',
+      key: 'libraries-session',
       pick: ['libraryBook'],
       storage: sessionStorage,
     }

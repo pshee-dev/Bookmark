@@ -1,14 +1,22 @@
 <script setup>
-  import { computed } from 'vue'
+  import { computed, watch, nextTick } from 'vue'
   import { useBookStore } from '@/stores/books'
   import { storeToRefs } from 'pinia'
   import SearchBook from '@/components/SearchBook.vue'
   import Loading from '@/components/Loading.vue'
   import { useScrollReveal } from '@/composables/scrollReveal'
-  const { collect } = useScrollReveal()
+  const { collect, refresh } = useScrollReveal()
 
   const bookStore = useBookStore()
   const { searchBookList, searchType, searchKeyword, isLoading } = storeToRefs(bookStore)
+
+  watch(
+    () => searchBookList.value.length,
+    async () => {
+      await nextTick()
+      refresh()
+    }
+  )
 
 </script>
 
