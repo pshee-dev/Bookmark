@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, watch } from 'vue'
+  import { ref, watch, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useScrollReveal } from '@/composables/scrollReveal'
   import { useLibraryStore } from '@/stores/libraries'
@@ -7,7 +7,7 @@
   import LibraryBook from '@/components/library/LibraryBook.vue'
   import Loading from '../Loading.vue'
 
-  const { collect } = useScrollReveal()
+  const { collect, refresh } = useScrollReveal()
 
   const libraryStore = useLibraryStore()
   const { libraryBookList, isLoading } = storeToRefs(libraryStore)
@@ -31,6 +31,14 @@
       }
     },
     { immediate: true }
+  )
+
+  watch(
+    () => libraryBookList.value.length,
+    async () => {
+      await nextTick()
+      refresh()
+    }
   )
 
   const setStatus = (nextStatus) => {

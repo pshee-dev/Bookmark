@@ -1,11 +1,11 @@
 ﻿<script setup>
-  import { computed, watch } from 'vue'
+  import { computed, watch, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import LibraryBook from '@/components/library/LibraryBook.vue'
   import { useLibraryStore } from '@/stores/libraries'
   import { useScrollReveal } from '@/composables/scrollReveal'
-  const { collect } = useScrollReveal()
+  const { collect, refresh } = useScrollReveal()
 
   const libraryStore = useLibraryStore()
   const { libraryBookList, hasMore, isLoading } = storeToRefs(libraryStore)
@@ -19,9 +19,18 @@
     (nextStatus) => {
       if (nextStatus) {
         libraryStore.fetchBookList(nextStatus)
+        window.scrollTo({ top: 0, behavior: 'auto' })
       }
     },
     { immediate: true }
+  )
+
+  watch(
+    () => libraryBookList.value.length,
+    async () => {
+      await nextTick()
+      refresh()
+    }
   )
 
   // 더보기 버튼 클릭 시 append 버전으로 fetchBookList 불러오기
