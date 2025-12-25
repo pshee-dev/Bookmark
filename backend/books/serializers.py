@@ -53,11 +53,11 @@ class BookWithReviewAndGalfiesSerializer(BookBaseSerializer):
 
     def get_galfies(self, obj):
         from galfies.serializers import GalfySerializer
-        return GalfySerializer(obj.galfies.all(), many=True).data
+        return GalfySerializer(obj.galfies.all(), many=True, context=self.context).data
 
     def get_reviews(self, obj):
         from reviews.serializers import ReviewSerializer
-        return ReviewSerializer(obj.reviews.all(), many=True).data
+        return ReviewSerializer(obj.reviews.all(), many=True, context=self.context).data
 
     class Meta(BookBaseSerializer.Meta):
         fields = (

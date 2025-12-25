@@ -8,7 +8,6 @@ export const useBookStore = defineStore('book', () => {
   const router = useRouter()
   
   const errorStore = useErrorStore()
-  const { errorStatus } = storeToRefs(errorStore)
   const API_URL = import.meta.env.VITE_API_URL
 
   const searchType = ref('title')
@@ -47,7 +46,7 @@ export const useBookStore = defineStore('book', () => {
   const fetchBooks = async () => {
     isLoading.value = true
     try {
-      const res = await axios.get(`${API_URL}/books/search/`, {
+      const res = await axios.get(`${API_URL}/api/v1/books/search/`, {
         params: {
           keyword: searchKeyword.value,
           field: searchType.value,
@@ -65,11 +64,7 @@ export const useBookStore = defineStore('book', () => {
 
       searchBookList.value.push(...results)
     } catch (err) {
-      if (err.response && err.response.status === 400) {
-        errorStatus.value = err.response.data.error.code
-        errorStore.openErrorModal(err.response.data.error.message)
-      }
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
@@ -80,23 +75,18 @@ export const useBookStore = defineStore('book', () => {
     isLoading.value = true
     try {
       // 상세보기 클릭 시 isbn 정보를 통해 book_id 반환
-      const res = await axios.post(`${API_URL}/books/resolve/`, {
+      const res = await axios.post(`${API_URL}/api/v1/books/resolve/`, {
         isbn: isbn,
       })
       const bookId = res.data.book_id
 
       // 반환된 bookId를 통해 도서 상세 정보 bookDetail에 할당 후 상세페이지로 이동
-      const res2 = await axios.get(`${API_URL}/books/${bookId}/`)
+      const res2 = await axios.get(`${API_URL}/api/v1/books/${bookId}/`)
       bookDetail.value = res2.data
       router.push({name: 'bookGalfyList', params: {bookId: bookId}})
 
     } catch (err) {
-      if (err.response && err.response.status === 400) {
-        // errorStatus.value = err.response.data.error.code
-        // errorStore.openErrorModal(err.response.data.error.message)
-        console.error(err)
-      }
-      console.error(err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }
@@ -114,17 +104,11 @@ export const useBookStore = defineStore('book', () => {
     isLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/books/${bookId}/`
+        `${API_URL}/api/v1/books/${bookId}/`
       )
       bookDetail.value = res.data
     } catch (err) {
-      if (err.response) {
-        errorStatus.value = err.response.data?.error?.code || 'unknown_error'
-        errorStore.openErrorModal(
-          err.response.data?.error?.message || '도서 정보를 불러오지 못했습니다.'
-        )
-      }
-      console.error('fetchBookDetail error:', err)
+      errorStore.handleRequestError(err)
     } finally {
       isLoading.value = false
     }

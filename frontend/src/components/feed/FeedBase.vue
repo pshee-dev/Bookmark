@@ -1,5 +1,18 @@
 <script setup>
   import { computed } from 'vue'
+  import { useRouter } from 'vue-router'
+  import iconLike from '@/assets/images/common/icon_like.png'
+  import iconLikeActive from '@/assets/images/common/icon_likes_active.png'
+  import { useFeedStore } from '@/stores/feeds'
+  import { useCommentStore } from '@/stores/comments'
+  import { useAccountStore } from '@/stores/accounts'
+  import { storeToRefs } from 'pinia'
+
+  const router = useRouter()
+  const accountStore = useAccountStore()
+  const feedStore = useFeedStore()
+  const commentStore = useCommentStore()
+  const { user } = storeToRefs(accountStore)
 
   const props = defineProps({
     feed: Object,
@@ -11,7 +24,27 @@
   })
 
   const goFeedDetail = () => {
+    const username = props.feed?.user?.username ?? user?.value?.username
+    if (!username || !props.feed?.id) return
+    if (props.feedType === 'review') {
+      router.push({ name: 'review', params: { username, reviewId: props.feed.id } })
+      return
+    }
+    if (props.feedType === 'galfy') {
+      router.push({ name: 'galfy', params: { username, galfyId: props.feed.id } })
+    }
+  }
 
+  const likeIcon = computed(() => {
+    return props.feed?.is_liked ? iconLikeActive : iconLike
+  })
+
+  const like = async () => {
+    await feedStore.actionLikes(props.feedType, props.feed.id)
+  }
+
+  const openComments = () => {
+    commentStore.openComments({ type: props.feedType, id: props.feed.id })
   }
 </script>
 
@@ -34,13 +67,13 @@
       <p class="content">{{ feed.content }}</p>
     </div>
     <div class="actions">
-      <button class="btn-action like">
-        <img src="@/assets/images/common/icon_like.png" alt="like">
-        <!-- {{ feed.likeCount }} -->
+      <button class="btn-action like" @click.stop="like">
+        <img :src="likeIcon" alt="like">
+        <p class="action-txt">{{ feed.likes_count }}</p>
       </button>
-      <button class="btn-action comment">
+      <button class="btn-action comment" @click.stop="openComments">
         <img src="@/assets/images/common/icon_comment.png" alt="comment">
-        <!-- {{ feed.commentCount }} -->
+        <p class="action-txt">{{ feed.comments_count }}</p>
       </button>
     </div>
   </div>
@@ -130,5 +163,13 @@
     border: none;
     background-color: transparent;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-txt {
+    font-size: 16px;
+    font-weight: 600;
   }
 </style>

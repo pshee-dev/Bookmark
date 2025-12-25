@@ -12,7 +12,7 @@ from django.utils import timezone
 class BookBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ('id', 'title', 'author', 'publisher')
+        fields = ('title', 'author', 'publisher', 'thumbnail')
 
 
 # 독서 상태 등록/수정 시 유효성 검증 및 자동화 로직을 위한 기본 시리얼라이저
@@ -28,7 +28,7 @@ class LibraryBookBaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Library
-        fields = ('status', 'start_date', 'finish_date', 'current_page', 'rating')
+        fields = ('id', 'status', 'start_date', 'finish_date', 'current_page', 'rating')
 
     # 유효성 검증 로직
     def validate(self, data):
@@ -104,7 +104,7 @@ class LibraryBookListSerializer(serializers.ModelSerializer):
     book = BookBaseSerializer(read_only=True)
     class Meta:
         model = Library
-        fields = ('id','status', 'start_date', 'finish_date', 'rating', 'book')
+        fields = ('id', 'status', 'start_date', 'finish_date', 'rating', 'book')
     
     # Todo: 페이지네이션
 
@@ -134,7 +134,7 @@ class LibraryBookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Library
-        fields = ('id', 'user', 'book', 'status', 'start_date', 'finish_date', 'rating', )
+        fields = ('id', 'user', 'book', 'status', 'start_date', 'finish_date', 'rating', 'current_page' )
 
 # [PATCH] 내 서재에 독서 상태 수정 - /library/{library_id}
 class LibraryBookUpdateSerializer(LibraryBookBaseSerializer):

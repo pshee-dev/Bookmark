@@ -2,6 +2,7 @@
   import LayoutHeader from '@/components/layout/LayoutHeader.vue'
   import LayoutFooter from '@/components/layout/LayoutFooter.vue'
   import ErrorModal from '@/components/ErrorModal.vue'
+  import CommentModal from '@/components/comments/CommentModal.vue'
 </script>
 
 <template>
@@ -13,6 +14,7 @@
 
   <!-- error modal -->
   <ErrorModal />
+  <CommentModal />
 </template>
 
 <style scoped>
