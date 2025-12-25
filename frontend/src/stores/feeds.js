@@ -131,9 +131,10 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
-  const createReview = async (bookId, payload) => {
+  const createReview = async (bookId, payload, options = {}) => {
     if (!bookId) return null
     isLoading.value = true
+    const shouldNavigate = options.navigate === true
     try {
       const res = await axios.post(
         `${API_URL}/api/v1/books/${bookId}/reviews/`,
@@ -146,7 +147,9 @@ export const useFeedStore = defineStore('feed', () => {
       )
       reviewList.value = [res.data, ...reviewList.value]
       reviewCount.value += 1
-      router.back()
+      if (shouldNavigate) {
+        router.back()
+      }
       return res.data
     } catch (err) {
       errorStore.handleRequestError(err)
@@ -156,9 +159,10 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
-  const updateReview = async (reviewId, payload) => {
+  const updateReview = async (reviewId, payload, options = {}) => {
     if (!reviewId) return null
     isLoading.value = true
+    const shouldNavigate = options.navigate === true
     try {
       const res = await axios.patch(
         `${API_URL}/api/v1/reviews/${reviewId}/`,
@@ -173,7 +177,9 @@ export const useFeedStore = defineStore('feed', () => {
       if (target) {
         Object.assign(target, res.data)
       }
-      router.back()
+      if (shouldNavigate) {
+        router.back()
+      }
       return res.data
     } catch (err) {
       errorStore.handleRequestError(err)
