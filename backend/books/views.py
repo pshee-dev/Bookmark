@@ -245,9 +245,9 @@ def resolve_by_isbn(request):
 def book_list(request):
     books = Book.objects.all()
     sort_direction = request.query_params.get('sort-direction', 'desc')
-    sort_field = request.query_params.get('sort-field', 'created_at')
+    sort_field = request.query_params.get('sort-field', 'id')
 
-    if sort_field not in ('created_at', 'id'):
+    if sort_field not in ('id',):
         sort_field = 'id'
     if sort_direction not in ('asc', 'desc'):
         sort_direction = 'desc'
