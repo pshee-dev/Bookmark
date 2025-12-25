@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('feed/', views.get_global_feed),
     path('<int:user_id>/follow/', views.follow),
     path('<int:user_id>/followings/', views.get_following_list),
     path('<int:user_id>/followers/', views.get_follower_list),
