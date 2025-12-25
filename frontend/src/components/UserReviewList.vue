@@ -1,33 +1,66 @@
 <script setup>
-  import { onMounted, ref, watch } from 'vue'
+  import { computed, ref, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import axios from 'axios'
   import { useAccountStore } from '@/stores/accounts'
   import { useErrorStore } from '@/stores/errors'
   import { useCommentStore } from '@/stores/comments'
   import FeedBase from '@/components/feed/FeedBase.vue'
+  import Loading from '@/components/Loading.vue'
 
   const API_URL = import.meta.env.VITE_API_URL
+
+  const route = useRoute()
 
   const accountStore = useAccountStore()
   const errorStore = useErrorStore()
   const commentStore = useCommentStore()
-  const { user, token } = storeToRefs(accountStore)
+  const { token } = storeToRefs(accountStore)
   const { comments, targetId, targetType } = storeToRefs(commentStore)
 
+  const username = computed(() => route.params.username)
+  const profileId = ref(null)
   const reviewList = ref([])
   const reviewCount = ref(0)
   const reviewPage = ref(1)
   const hasMore = ref(false)
   const isLoading = ref(false)
 
+  const resetListState = () => {
+    reviewList.value = []
+    reviewCount.value = 0
+    reviewPage.value = 1
+    hasMore.value = false
+  }
+
+  const fetchProfileId = async () => {
+    if (!token.value || !username.value) return
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/v1/users/profile/`,
+        {
+          params: {
+            username: username.value,
+          },
+          headers: {
+            Authorization: `Token ${token.value}`,
+          },
+        }
+      )
+      profileId.value = res.data?.id ?? null
+    } catch (err) {
+      errorStore.handleRequestError(err)
+    }
+  }
+
   const fetchReviews = async ({ page = 1, append = false } = {}) => {
-    if (!user.value?.id || !token.value) return
+    if (!profileId.value || !token.value) return
     if (isLoading.value) return
     isLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/api/v1/users/${user.value.id}/reviews/`,
+        `${API_URL}/api/v1/users/${profileId.value}/reviews/`,
         {
           params: {
             page,
@@ -63,9 +96,16 @@
     }
   }
 
-  onMounted(() => {
-    fetchReviews()
-  })
+  const refreshForUser = async () => {
+    if (!token.value || !username.value) return
+    resetListState()
+    await fetchProfileId()
+    await fetchReviews()
+  }
+
+  watch([username, token], () => {
+    refreshForUser()
+  }, { immediate: true })
 
   watch([comments, targetId, targetType], ([nextComments, nextId, nextType]) => {
     if (nextType !== 'review' || !nextId) return
@@ -77,7 +117,9 @@
   <div class="tab-body">
     <h4 class="count-title">작성된 리뷰 <strong>{{ reviewCount }}</strong>개</h4>
 
-    <div v-if="isLoading && reviewList.length === 0" class="no-content">로딩중</div>
+    <div v-if="isLoading && reviewList.length === 0" class="no-content">
+      <Loading />
+    </div>
     <div v-else-if="reviewList.length === 0" class="no-content">작성된 리뷰가 없습니다.</div>
 
     <ul v-else class="post-list">

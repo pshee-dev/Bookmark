@@ -1,12 +1,12 @@
 <script setup>
-  import { onMounted, computed } from 'vue'
+  import { onMounted, computed, watch, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useBookStore } from '@/stores/books'
   import { useLibraryStore } from '@/stores/libraries'
   import LibraryModal from '@/components/library/LibraryModal.vue'
   import { useScrollReveal } from '@/composables/scrollReveal'
-  const { collect } = useScrollReveal()
+  const { collect, refresh } = useScrollReveal()
 
   const route = useRoute()
   const bookId = computed(() => route.params.bookId)
@@ -31,6 +31,14 @@
       bookStore.fetchBookDetail(bookId.value)
     }
   })
+
+  watch(
+    () => bookDetail.value?.id,
+    async () => {
+      await nextTick()
+      refresh()
+    }
+  )
 </script>
 
 

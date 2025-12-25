@@ -52,4 +52,4 @@ class FollowListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'profile_img')
+        fields = ('id', 'username', 'full_name', 'profile_img')

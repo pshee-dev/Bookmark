@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('feed/', views.get_global_feed),
+    path('profile/', views.profile_by_username),
     path('<int:user_id>/follow/', views.follow),
     path('<int:user_id>/followings/', views.get_following_list),
     path('<int:user_id>/followers/', views.get_follower_list),

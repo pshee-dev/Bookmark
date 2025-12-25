@@ -25,8 +25,8 @@ class Book(models.Model):
 
 class ExternalCategoryMapping(models.Model):
     provider = models.CharField(max_length=30)  # 알라딘
-    external_cid = models.CharField(max_length=50, blank=True)
-    external_name = models.CharField(max_length=50, blank=True)
+    external_cid = models.CharField(max_length=100, blank=True)
+    external_name = models.CharField(max_length=255, blank=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.PROTECT,

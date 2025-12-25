@@ -1,5 +1,5 @@
 ﻿<script setup>
-  import { computed, watch } from 'vue'
+  import { computed, watch, nextTick } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useFeedStore } from '@/stores/feeds'
@@ -7,7 +7,7 @@
   import FeedBase from '@/components/feed/FeedBase.vue'
   import LibraryModal from '@/components/library/LibraryModal.vue'
   import { useScrollReveal } from '@/composables/scrollReveal'
-  const { collect } = useScrollReveal()
+  const { collect, refresh } = useScrollReveal()
 
   const route = useRoute()
   const router = useRouter()
@@ -87,12 +87,30 @@
 
   watch(
     () => book.value.id,
-    (id) => {
+    async (id) => {
       if (!id) return
       feedStore.fetchGalfies(id, { mine: true })
       feedStore.fetchReviews(id, { mine: true })
+      await nextTick()
+      refresh()
     },
     { immediate: true }
+  )
+
+  watch(
+    () => galfyList.value.length,
+    async () => {
+      await nextTick()
+      refresh()
+    }
+  )
+
+  watch(
+    () => libraryBook.value?.id,
+    async () => {
+      await nextTick()
+      refresh()
+    }
   )
 </script>
 

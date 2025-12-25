@@ -14,6 +14,10 @@ meta.ownerOnly     → 본인만 접근
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/',
@@ -130,7 +134,7 @@ const router = createRouter({
     {
       path: '/bookmark/:username',
       component: () => import('@/views/UserView.vue'),
-      meta: { requiresAuth: true, ownerOnly: true },
+      meta: { requiresAuth: true },
       children: [
         { path: '', name: 'user', component: () => import('@/components/UserGalfyList.vue') },
         { path: 'galfy', name: 'userGalfyList', component: () => import('@/components/UserGalfyList.vue') },

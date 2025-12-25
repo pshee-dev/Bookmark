@@ -12,7 +12,7 @@
   })
 
   const goDetail = () => {
-    router.push({name: 'library', params: { username: user.username, libraryId: props.item.id}})
+    router.push({name: 'library', params: { username: user?.value.username, libraryId: props.item.id}})
   }
 
 </script>

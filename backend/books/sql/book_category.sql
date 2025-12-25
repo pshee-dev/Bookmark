@@ -29,3 +29,4 @@ INSERT INTO books_category (id, name) VALUES (28, '좋은부모');
 INSERT INTO books_category (id, name) VALUES (29, '중학교참고서');
 INSERT INTO books_category (id, name) VALUES (30, '청소년');
 INSERT INTO books_category (id, name) VALUES (31, '초등학교참고서');
+INSERT INTO books_category (id, name) VALUES (32, '외국도서');
