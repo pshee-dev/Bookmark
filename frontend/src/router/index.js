@@ -130,7 +130,7 @@ const router = createRouter({
     {
       path: '/bookmark/:username',
       component: () => import('@/views/UserView.vue'),
-      meta: { requiresAuth: true, ownerOnly: true },
+      meta: { requiresAuth: true },
       children: [
         { path: '', name: 'user', component: () => import('@/components/UserGalfyList.vue') },
         { path: 'galfy', name: 'userGalfyList', component: () => import('@/components/UserGalfyList.vue') },

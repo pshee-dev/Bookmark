@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import axios from 'axios'
@@ -25,8 +25,11 @@
   const followType = ref('followings')
   const followList = ref([])
   const isFollowLoading = ref(false)
+  const isFollowing = ref(false)
+  const isFollowActionLoading = ref(false)
 
   const username = computed(() => route.params.username)
+  const isOwner = computed(() => user.value?.username === username.value)
 
   const displayName = computed(() => {
     return profile.value?.full_name || user.value?.name || user.value?.username || ''
@@ -40,11 +43,14 @@
   }
 
   const fetchProfile = async () => {
-    if (!user.value?.id || !token.value) return
+    if (!token.value || !username.value) return
     try {
       const res = await axios.get(
-        `${API_URL}/api/v1/users/${user.value.id}/`,
+        `${API_URL}/api/v1/users/profile/`,
         {
+          params: {
+            username: username.value,
+          },
           headers: {
             Authorization: `Token ${token.value}`,
           },
@@ -81,10 +87,10 @@
   }
 
   const fetchGalfyCount = async () => {
-    if (!user.value?.id || !token.value) return
+    if (!profile.value?.id || !token.value) return
     try {
       const res = await axios.get(
-        `${API_URL}/api/v1/users/${user.value.id}/galfies/`,
+        `${API_URL}/api/v1/users/${profile.value.id}/galfies/`,
         {
           params: {
             page: 1,
@@ -104,10 +110,10 @@
   }
 
   const fetchReviewCount = async () => {
-    if (!user.value?.id || !token.value) return
+    if (!profile.value?.id || !token.value) return
     try {
       const res = await axios.get(
-        `${API_URL}/api/v1/users/${user.value.id}/reviews/`,
+        `${API_URL}/api/v1/users/${profile.value.id}/reviews/`,
         {
           params: {
             page: 1,
@@ -142,12 +148,18 @@
     followList.value = []
   }
 
+  const goUserProfile = (targetUsername) => {
+    if (!targetUsername) return
+    closeFollowModal()
+    router.push({ name: 'userGalfyList', params: { username: targetUsername } })
+  }
+
   const fetchFollowList = async () => {
-    if (!user.value?.id || !token.value) return
+    if (!profile.value?.id || !token.value) return
     isFollowLoading.value = true
     try {
       const res = await axios.get(
-        `${API_URL}/api/v1/users/${user.value.id}/${followType.value}/`,
+        `${API_URL}/api/v1/users/${profile.value.id}/${followType.value}/`,
         {
           headers: {
             Authorization: `Token ${token.value}`,
@@ -166,16 +178,81 @@
     }
   }
 
-  onMounted(async () => {
+  const refreshForUser = async () => {
     await fetchProfile()
     await Promise.all([
       fetchLibraryCount('reading'),
       fetchLibraryCount('want'),
       fetchLibraryCount('finished'),
+    ])
+    await Promise.all([
       fetchGalfyCount(),
       fetchReviewCount(),
     ])
+    if (!isOwner.value) {
+      await fetchFollowStatus()
+    }
+  }
+
+  const fetchFollowStatus = async () => {
+    if (!user.value?.id || !profile.value?.id || !token.value) return
+    try {
+      const res = await axios.get(
+        `${API_URL}/api/v1/users/${user.value.id}/followings/`,
+        {
+          headers: {
+            Authorization: `Token ${token.value}`,
+          },
+        }
+      )
+      const list = Array.isArray(res.data) ? res.data : []
+      isFollowing.value = list.some((item) => item.id === profile.value.id)
+    } catch (err) {
+      if (err.response?.status === 404) {
+        isFollowing.value = false
+      } else {
+        errorStore.handleRequestError(err)
+      }
+    }
+  }
+
+  const toggleFollow = async () => {
+    if (!profile.value?.id || isFollowActionLoading.value) return
+    isFollowActionLoading.value = true
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/v1/users/${profile.value.id}/follow/`,
+        {},
+        {
+          headers: {
+            Authorization: `Token ${token.value}`,
+          },
+        }
+      )
+      if (res.status === 200) {
+        isFollowing.value = true
+        profile.value.followers_count = (profile.value.followers_count ?? 0) + 1
+      } else if (res.status === 204) {
+        isFollowing.value = false
+        profile.value.followers_count = Math.max((profile.value.followers_count ?? 1) - 1, 0)
+      }
+    } catch (err) {
+      errorStore.handleRequestError(err)
+    } finally {
+      isFollowActionLoading.value = false
+    }
+  }
+
+  onMounted(async () => {
+    await refreshForUser()
   })
+
+  watch(
+    () => route.params.username,
+    () => {
+      refreshForUser()
+    }
+  )
 </script>
 
 <template>
@@ -205,7 +282,23 @@
             <li>리뷰 <strong>{{ reviewCount }}</strong></li>
           </ul>
         </div>
-        <button class="btn btn-small btn-edit" type="button" @click.stop="goEditProfile">회원 정보 수정</button>
+        <button
+          v-if="isOwner"
+          class="btn btn-small btn-edit"
+          type="button"
+          @click.stop="goEditProfile"
+        >
+          회원 정보 수정
+        </button>
+        <button
+          v-else
+          class="btn btn-small btn-edit"
+          type="button"
+          :disabled="isFollowActionLoading"
+          @click.stop="toggleFollow"
+        >
+          {{ isFollowing ? '언팔로우' : '팔로우' }}
+        </button>
       </div>
 
       <div class="library-summary">
@@ -253,17 +346,22 @@
       <div class="modal-header">
         <h2 class="title">{{ followType === 'followers' ? '팔로워' : '팔로잉' }}</h2>
         <button class="btn-close" type="button" @click="closeFollowModal">
-          <img src="@/assets/images/common/btn_close.png" alt="?? ??">
+          <img src="@/assets/images/common/btn_close.png" alt="닫기 버튼">
         </button>
       </div>
       <div v-if="isFollowLoading" class="no-content"><Loading /></div>
       <div v-else-if="followList.length === 0" class="no-content">팔로우 정보가 없습니다.</div>
       <ul v-else class="follow-list">
-        <li v-for="item in followList" :key="item.id" class="follow-item">
+        <li
+          v-for="item in followList"
+          :key="item.id"
+          class="follow-item"
+          @click="goUserProfile(item.username)"
+        >
           <div class="profile-image small">
             <img :src="resolveProfileUrl(item.profile_img)" :alt="item.full_name">
           </div>
-          <p class="name f-pre">{{ item.full_name }}</p>
+          <p class="name f-pre"><small class="username f-pre">{{ item.username }}</small>{{ item.full_name }}</p>
         </li>
       </ul>
     </div>
@@ -402,6 +500,13 @@
     align-items: center;
     gap: 12px;
     padding: 8px 0;
+    color: #111;
+    transition: all ease .2s;
+    cursor: pointer;
+  }
+
+  .follow-item:hover .name {
+    color: #456AFF;
   }
 
   .profile-image.small {
@@ -412,5 +517,13 @@
   .name {
     font-size: 16px;
     font-weight: 600;
+  }
+
+  .name .username {
+    display: block;
+    color: #555;
+    margin-bottom: 5px;
+    font-size: 80%;
+    font-weight: 400;
   }
 </style>

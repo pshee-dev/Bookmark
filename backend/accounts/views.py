@@ -60,6 +60,38 @@ def profile(request, user_id):
 
 @extend_schema(
     tags=["Accounts"],
+    summary="유저 프로필 조회 (username)",
+    description="""
+    username으로 유저 프로필 정보를 조회합니다.
+
+    - 로그인 필요
+    """,
+    parameters=[OpenApiParameter("username", str, location=OpenApiParameter.QUERY)],
+    responses={
+        200: UserProfileSerializer,
+        400: OpenApiResponse(description="username query required"),
+        404: OpenApiResponse(description="유저가 존재하지 않음"),
+    }
+)
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def profile_by_username(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response(
+            {"error": {"message": "username query required"}},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    user_with_counts = User.objects.annotate(
+        followings_count=Count('followings', distinct=True),
+        followers_count=Count('followers', distinct=True),
+    )
+    member = get_object_or_404(user_with_counts, username=username)
+    serializer = UserProfileSerializer(member)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@extend_schema(
+    tags=["Accounts"],
     summary="팔로우 / 언팔로우",
     description="""
     특정 유저를 팔로우하거나 언팔로우합니다.
