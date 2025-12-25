@@ -1,0 +1,5 @@
+INSERT INTO libraries_library (id, status, created_at, start_date, finish_date, rating, book_id, user_id, current_page) VALUES (17, 'finished', '2025-12-25 04:35:17.758786', null, null, 4, 227, 9, 176);
+INSERT INTO libraries_library (id, status, created_at, start_date, finish_date, rating, book_id, user_id, current_page) VALUES (18, 'finished', '2025-12-25 04:35:21.873144', null, null, 5, 228, 9, 408);
+INSERT INTO libraries_library (id, status, created_at, start_date, finish_date, rating, book_id, user_id, current_page) VALUES (19, 'finished', '2025-12-25 04:35:25.988113', null, null, 4, 229, 9, 184);
+INSERT INTO libraries_library (id, status, created_at, start_date, finish_date, rating, book_id, user_id, current_page) VALUES (20, 'finished', '2025-12-25 04:35:30.069284', null, null, 5, 230, 9, 692);
+INSERT INTO libraries_library (id, status, created_at, start_date, finish_date, rating, book_id, user_id, current_page) VALUES (21, 'finished', '2025-12-25 04:35:34.164175', null, null, 4, 232, 9, 148);

@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/v1/galfies/', include('galfies.urls')),
     path('api/v1/comments/', include('comments.urls')),
     path('api/v1/likes/', include('likes.urls')),
+    path('api/recommendations/', include('recommendations.urls')),
     # schema (Swagger UI가 이 endpoint를 읽어서 문서를 그림)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     # swagger UI (브라우저에서 사람이 보는 문서 화면)
