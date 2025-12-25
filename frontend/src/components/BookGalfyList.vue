@@ -23,7 +23,7 @@
       <li
         v-for="galfy in galfyList"
       >
-        <FeedBase :feed-type="'galfy'" :feed="galfy"/>
+        <FeedBase :feed-type="'galfy'" :feed="galfy" :show-profile="true" :show-book-info="false" />
       </li>
     </ul>
     <div v-else class="no-content">작성된 갈피가 없습니다.</div>
