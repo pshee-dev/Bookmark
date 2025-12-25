@@ -27,7 +27,7 @@
     activeStatus,
     (nextStatus) => {
       if (nextStatus) {
-        libraryStore.fetchBookList(nextStatus)
+        libraryStore.fetchBookList(nextStatus, { limit: 4 })
       }
     },
     { immediate: true }
